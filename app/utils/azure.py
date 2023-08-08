@@ -2,6 +2,7 @@
 
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
+from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 
 class AzureClient:
     """
@@ -44,5 +45,19 @@ class AzureClient:
         except:
             raise Exception(f"Secret {secret_name} does not exist.")
 
-    def get_az_monitor_exporter(self, app_insights_pk: str):
-        return None
+    def get_az_monitor_exporter(self, app_insights_pk: str) -> AzureMonitorTraceExporter:
+        """
+        Create an instance of the Azure Monitor Trace Exporter.
+
+        The connection to the application insights service is done through the primary key.
+
+        :param app_insights_pk: the primary key of the application insights service
+        :return: an instance of the Azure Monitor Trace Exporter
+        """
+
+        try:
+            return AzureMonitorTraceExporter.from_connection_string(
+                connection_string = f"InstrumentationKey={app_insights_pk}"
+            )
+        except:
+            raise Exception(f"Could not connect to the application insights service.")
