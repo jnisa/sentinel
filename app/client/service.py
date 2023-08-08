@@ -3,7 +3,7 @@
 
 from params.span import SpanStatus, SpanKind
 
-class ServicesSpan:
+class ServiceSpan:
     def __init__(self) -> None:
         """
         Initialize the ServicesSpan class.
