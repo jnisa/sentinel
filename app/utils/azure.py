@@ -1,5 +1,8 @@
 # Functions to interact with Azure services
 
+from azure.keyvault.secrets import SecretClient
+from azure.identity import DefaultAzureCredential
+
 class AzureClient:
     """
     Class that will contain multiple functions to interact with some of the Azure services 
@@ -7,19 +10,25 @@ class AzureClient:
 
     Up to this point, the functions that we will be using are:
     1. get secrets from Azure Key Vault;
+
+    TODO. consider the expansion of this module to encompass the following capabilities:
+    1. set an external consumer and/or producer Azure Event Hub;
+    2. connection to the application insights service;
     """
 
-    def __init__(self) -> None:
+    def __init__(self, kv_id: str):
         """
         Initialize the AzureClient class.
+
+        :param kv_id: id of the Azure Key Vault
         """
 
-        pass
+        credential = DefaultAzureCredential()
+        kv_url = f"https://{kv_id}.vault.azure.net"
 
-    # TODO. there's probably internal methods that should be added to this class
-    # to setup the connection to the Azure services.
+        self.kv_client = SecretClient(vault_url = kv_url, credential = credential)
 
-    def get_kv_secret(secret_name: str) -> str:
+    def get_kv_secret(self, secret_name: str) -> str:
         """
         Retrive the value of a secret from an Azure Key Vault secret.
 
@@ -30,4 +39,10 @@ class AzureClient:
         :return: the value of the secret 
         """
         
+        try:
+            return self.kv_client.get_secret(secret_name).value
+        except:
+            raise Exception(f"Secret {secret_name} does not exist.")
+
+    def get_az_monitor_exporter(self, app_insights_pk: str):
         return None
