@@ -4,6 +4,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
 from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 
+
 class AzureClient:
     """
     Class that will contain multiple functions to interact with some of the Azure services 
@@ -24,10 +25,21 @@ class AzureClient:
         :param kv_id: id of the Azure Key Vault
         """
 
-        credential = DefaultAzureCredential()
         kv_url = f"https://{kv_id}.vault.azure.net"
 
-        self.kv_client = SecretClient(vault_url = kv_url, credential = credential)
+        self.kv_client = SecretClient(vault_url = kv_url, credential = self.credential)
+
+    @property
+    def credential(self) -> DefaultAzureCredential:
+        """
+        Property that contains the DefaultAzureCredential instance.
+
+        :return: the DefaultAzureCredential instance
+        """
+
+        self._credential = DefaultAzureCredential()
+
+        return self._credential 
 
     def get_kv_secret(self, secret_name: str) -> str:
         """
