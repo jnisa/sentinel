@@ -63,7 +63,7 @@ class PipelineTracer:
 
         pass
 
-    def _create_processor(self) -> None:
+    def _create_processor(self, processor_type = TracerProcessorType.batch) -> None:
         """
         Attach a processor to the tracer.
 
@@ -74,4 +74,4 @@ class PipelineTracer:
         :return: TBD
         """
 
-        pass
+        return processor_type

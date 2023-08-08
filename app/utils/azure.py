@@ -26,19 +26,12 @@ class AzureClient:
         """
 
         kv_url = f"https://{kv_id}.vault.azure.net"
+        self._credential = DefaultAzureCredential()
 
-        self.kv_client = SecretClient(vault_url = kv_url, credential = self.credential)
+        self.kv_client = SecretClient(vault_url = kv_url, credential = self._credential)
 
     @property
     def credential(self) -> DefaultAzureCredential:
-        """
-        Property that contains the DefaultAzureCredential instance.
-
-        :return: the DefaultAzureCredential instance
-        """
-
-        self._credential = DefaultAzureCredential()
-
         return self._credential 
 
     def get_kv_secret(self, secret_name: str) -> str:
