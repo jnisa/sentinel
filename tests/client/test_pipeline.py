@@ -1,7 +1,5 @@
 # Unit Test to the PipelineTracer
 
-import pdb
-
 from unittest import TestCase
 from unittest import mock
 from unittest.mock import patch, MagicMock

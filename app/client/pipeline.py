@@ -85,7 +85,7 @@ class PipelineTracer:
         """
 
         return self.global_tracer.get_tracer(self._tracer_id)
-
+    
     def _set_exporter_type(self) -> TracerExporterType:
         """
         Sets the type of exporter that the tracer will use.
@@ -123,6 +123,3 @@ class PipelineTracer:
             raise Exception(
                 "Invalid processor type provided. The only types available are: BATCH and SIMPLE"
             )
-        
-
-    # TODO. shutdown function missing - add it
