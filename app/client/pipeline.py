@@ -26,7 +26,7 @@ class PipelineTracer:
             exporter_type: str = 'CONSOLE'
         ) -> TracerProvider:
         """
-        Initialize the PipelineWatchdog class.
+        Initialize the PipelineTracer class.
 
         :param tracer_id: The id of the tracer that will be used to monitorize the pipeline.
         :param processor_type: The type of processor that will be used by the tracer.
@@ -124,3 +124,5 @@ class PipelineTracer:
                 "Invalid processor type provided. The only types available are: BATCH and SIMPLE"
             )
         
+
+    # TODO. shutdown function missing - add it
