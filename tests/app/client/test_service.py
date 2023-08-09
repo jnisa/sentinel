@@ -2,8 +2,6 @@
 
 from unittest import TestCase
 
-from app.client.service import ServiceSpan
-
 class TestServiceSpan(TestCase):
 
     def test_set_attributes_basic(self):

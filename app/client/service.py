@@ -1,7 +1,7 @@
 # Class that will be used to grant the monitorization of the services
 # leveraged by the pipelines currently running on the platform targeted.
 
-from ..params.span import SpanStatus, SpanKind
+from ..constants.span import SpanStatus, SpanKind
 
 class ServiceSpan:
     def __init__(self) -> None:

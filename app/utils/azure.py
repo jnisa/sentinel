@@ -32,6 +32,10 @@ class AzureClient:
 
     @property
     def credential(self) -> DefaultAzureCredential:
+        """
+        Retrieve the credential under usage.
+        """
+
         return self._credential 
 
     def get_kv_secret(self, secret_name: str) -> str:
@@ -65,4 +69,4 @@ class AzureClient:
                 connection_string = f"InstrumentationKey={app_insights_pk}"
             )
         except:
-            raise Exception(f"Could not connect to the application insights service.")
+            raise Exception("Could not connect to the application insights service.")
