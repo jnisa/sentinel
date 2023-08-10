@@ -38,7 +38,7 @@ class TestAzureClient(TestCase):
         self.assertEqual(actual, expected)
     
     @mock.patch("app.utils.azure.SecretClient")
-    def test_get_kv_secret_secret_not_exist(self, mock_secret_client):
+    def test_get_kv_secret_secret_complex(self, mock_secret_client):
         kv_id = "test_kv"
         secret_name = "test_secret"
 

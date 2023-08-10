@@ -1,6 +1,13 @@
 # Class that will be used to grant the monitorization of pipelines
 # currently running on the platform targeted by this project.
 
+from typing import Optional
+
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+
+from ..constants.tracer import TracerProcessorType
+from ..constants.tracer import TracerExporterType
 
 class PipelineTracer:
     """
@@ -12,43 +19,74 @@ class PipelineTracer:
     being: service and process.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+            self, 
+            tracer_id: str, 
+            processor_type: str = 'BATCH', 
+            exporter_type: str = 'CONSOLE'
+        ) -> TracerProvider:
         """
-        Initialize the PipelineWatchdog class.
-        """
+        Initialize the PipelineTracer class.
 
-        pass
-
-    def create_tracer(self) -> None:
-        """
-        Create a tracer to monitor the pipeline that is currently running.
-
-        Each and every pipeline that is running on the platform should have a dedicated tracer
-        i.e. the tracer of the streaming pipeline that register all the CDC data should not be
-        the same as the one that is monitoring the data ingestion pipeline.
-
-        :param arg1: TBD
-        :return: TBD
+        :param tracer_id: The id of the tracer that will be used to monitorize the pipeline.
+        :param processor_type: The type of processor that will be used by the tracer.
+        :param exporter_type: The type of exporter that will be used by the tracer.
         """
 
-        pass
+        self._tracer_id = tracer_id
+        self._processor_type = processor_type
+        self._exporter_type = exporter_type
 
-    def get_tracer(self) -> None:
+        provider = TracerProvider()
+        processor = self._create_processor(self._set_exporter_type())
+        provider.add_span_processor(processor)
+
+        self.global_tracer = trace.set_tracer_provider(provider)
+
+
+    @property
+    def tracer_id(self) -> Optional[str]:
         """
-        Grab an existing tracer.
+        Retrieve the tracer_id under usage.
+        """
+
+        return self._tracer_id
+    
+    @property
+    def processor_type(self) -> Optional[str]:
+        """
+        Retrieve the processor type under usage.
+        """
+
+        return self._processor_type
+    
+    @property
+    def exporter_type(self) -> Optional[str]:
+        """
+        Retrieve the exporter type under usage.
+        """
+
+        return self._exporter_type
+
+    def get_tracer(self) -> TracerProvider:
+        """
+        Get a opentelemetry tracer.
+
+        From the global tracer_provider - that is created by this class, taking into acccount
+        the configuration features provided by the user - we can create a tracer that will
+        be used to monitorize the pipeline with the tracer_id provided.
 
         In case we want to retrieve an existing tracer - instead of creating a new one - we
         should use this function. Also, if for any reason we want to modify one of the
         configuration features of the tracer, we can use this function to get access to the
         that specific tracer and then modify it.
 
-        :param arg1: TBD
-        :return: TBD
+        :return: a tracer configured according the arguments provided to this class
         """
 
-        pass
-
-    def _set_exporter_type(self) -> None:
+        return self.global_tracer.get_tracer(self._tracer_id)
+    
+    def _set_exporter_type(self) -> TracerExporterType:
         """
         Sets the type of exporter that the tracer will use.
 
@@ -57,21 +95,31 @@ class PipelineTracer:
         specific location. This function will be used to set the type of exporter that the
         tracer will use.
 
-        :param arg1: TBD
-        :return: TBD
+        :return: the exporter type configured according the arguments provided to this class
         """
 
-        pass
+        try:
+            return getattr(TracerExporterType, self._exporter_type)
+        except:
+            raise Exception(
+                "Invalid exporter type provided. The only types available are: CONSOLE and MEMORY"
+            )
+        
 
-    def _create_processor(self, processor_type = TracerProcessorType.batch) -> None:
+    def _create_processor(self, exporter: TracerExporterType) -> TracerProcessorType:
         """
         Attach a processor to the tracer.
 
         The processor will be used to process the data that is being collected by the tracer.
         This function will be used to create a processor and attach it to the tracer.
-
-        :param arg1: TBD
-        :return: TBD
+        
+        :param exporter: the exporter that will be used by the processor
+        :return: a processor configured according the arguments provided to this class
         """
 
-        return processor_type
+        try:
+            return getattr(TracerProcessorType, self._processor_type)(exporter)
+        except:
+            raise Exception(
+                "Invalid processor type provided. The only types available are: BATCH and SIMPLE"
+            )
