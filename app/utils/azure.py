@@ -36,7 +36,7 @@ class AzureClient:
         Retrieve the credential under usage.
         """
 
-        return self._credential 
+        return self._credential
 
     def get_kv_secret(self, secret_name: str) -> str:
         """
