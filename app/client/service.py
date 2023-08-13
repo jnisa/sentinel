@@ -5,9 +5,8 @@ from typing import List
 
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
+from opentelemetry.sdk.trace import Span
 
-from ..constants.span import SpanStatus
-from ..constants.span import SpanKind
 
 # TODO. complete the documentation of this class
 class ServiceSpan:
@@ -24,32 +23,19 @@ class ServiceSpan:
     where the structure is already in implemented.
     """
 
-    def __init__(self, tracer_id: str, span_id: str):
+    def __init__(self, tracer_id: str, span_id: Span):
         """
         Initialize the ServicesSpan class.
 
         :param tracer_id: The id of the tracer that in which all the spans will be created.
-
+        :param span_id: The id of the span that will be used to monitorize the services.
         """
 
-        self._tracer_id = tracer_id
-        self._span_id = span_id
-
-        # create a span
-        self.current_span = self._create_span()
-
-    def _create_span(self) -> None:
-        """
-        Create a span.
-
-        :param arg1: TBD
-        :return: TBD
-        """
-
-        pass
+        self.tracer_id = tracer_id
+        self.current_span = span_id
 
     # TODO. check if there's a way to set the attributes of the span in a more efficient way.
-    def set_attributes(self, attributes: list):
+    def set_attributes(self, attributes: List[dict]):
         """
         Set the attributes of the services span.
 
@@ -78,34 +64,5 @@ class ServiceSpan:
         :param events: list of events that we want to add to the span
         """
 
-        self.current_span.add_event(*events)
-
-    def set_kind(self, span_kind: str = 'INTERNAL'):
-        """
-        Set the kind of the span.
-
-        A Span can be of many kinds: Client, Server, Internal, Producer, and/or Consumer.
-        This function will set the default kind to be Client.
-
-        :param span_kind: the kind of the span to which the current span will be set to
-        """
-
-        try:
-            return self.current_span.set_kind(getattr(SpanKind, span_kind))
-        except:
-            raise Exception(
-                "Invalid kind type provided. Check the documentation for the supported types."
-            )
-
-    # TODO. this function needs to receive the trace
-    # TODO. reflect if this is function is really needed since we have the method built-in in the 
-    # context of opentelemetry probably this can be seen as property of the class
-    def get_current_span(self) -> None:
-        """
-        Retrieves the observability span under usage.
-
-        :param arg1: TBD
-        :return: TBD
-        """
-
-        pass
+        for event in events:
+            self.current_span.add_event(event)
