@@ -2,6 +2,7 @@
 # leveraged by the pipelines currently running on the platform targeted.
 
 from typing import List
+from typing import Dict
 
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
@@ -23,19 +24,10 @@ class ServiceSpan:
     where the structure is already in implemented.
     """
 
-    def __init__(self, tracer_id: str, span_id: Span):
-        """
-        Initialize the ServicesSpan class.
 
-        :param tracer_id: The id of the tracer that in which all the spans will be created.
-        :param span_id: The id of the span that will be used to monitorize the services.
-        """
-
-        self.tracer_id = tracer_id
-        self.current_span = span_id
-
+    # TODO. ajust the documentation of this method
     # TODO. check if there's a way to set the attributes of the span in a more efficient way.
-    def set_attributes(self, attributes: List[dict]):
+    def set_attributes(current_span: Span, attributes: List[Dict]):
         """
         Set the attributes of the services span.
 
@@ -52,9 +44,10 @@ class ServiceSpan:
 
         for attribute in attributes:
             for key, value in attribute.items():
-                self.current_span.set_attribute(key, value)
+                current_span.set_attribute(key, value)
 
-    def add_events(self, events: List[str]):
+    # TODO. ajust the documentation of this method
+    def add_events(current_span: Span, events: List[str]):
         """
         Add events to the span.
 
@@ -65,4 +58,4 @@ class ServiceSpan:
         """
 
         for event in events:
-            self.current_span.add_event(event)
+            current_span.add_event(event)

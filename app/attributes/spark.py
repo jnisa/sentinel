@@ -1,23 +1,23 @@
 # Class that will be used to define the attributes that will be used to monitorize the
 # Spark operations
 
-from typing import Optional
+from typing import Union
 from typing import List, Dict
-
-from app.client.pipeline import PipelineTracer
-from app.client.service import ServiceSpan
 
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
+from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace import Tracer
 
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
+from app.client.service import ServiceSpan
 
 def spark_observability(
-        object_span,
-        tracer_id: str,
+        object_span: Union[DataFrame, RDD, SparkSession],
+        tracer: Tracer,
         service_id: str
 ):
     """
@@ -27,9 +27,15 @@ def spark_observability(
     These can be not only attributes related with the objects that are being targeted 
     on the multiple operations performed, but it can also be attributes related with
     the Spark cluster itself, e.g. (number of nodes, number of cores, etc.).
+
+    :param object_span: Span that will be used to monitorize the object that is being targeted
+    :param tracer_id: The id of the tracer where the span is settled
+    :param service_id: The id of the service that is under monitorization
     """
 
-    tracer = PipelineTracer(tracer_id).get_tracer()
+    # TODO. evaluate if this should be maintained or not
+    # # get the underlying tracer of the spans that will be created
+    # tracer = PipelineTracer(tracer_id).get_tracer()
 
     def _handler(object_span):
         """
@@ -65,22 +71,6 @@ def spark_observability(
         else:
             raise Exception('The object_span is not a valid object type to be monitored.')
 
-    @property
-    def object_span() -> Optional[str]:
-        """
-        Retrieve the object_span under usage.
-        """
-
-        return object_span
-
-    @property
-    def service_id() -> Optional[str]:
-        """
-        Retrieve the service_id under usage
-        """
-
-        return service_id
-
     @tracer.start_as_current_span(name=f'{service_id}.df_columns')
     def _get_df_columns(df: DataFrame) -> List[Dict]:
         """
@@ -92,15 +82,14 @@ def spark_observability(
         :param df: the dataframe that will be used to retrieve the columns.
         """
 
-        span_id = f'{service_id}.df_columns'
-        current_span = ServiceSpan(tracer_id, span_id)
+        current_span = tracer.get_current_span()
 
         try:
             attributes = [
                 {'columns': df.columns},
                 {'columns_count': len(df.columns)}
             ]
-            current_span.set_attributes(attributes)
+            ServiceSpan.set_attributes(current_span, attributes)
             current_span.set_span_status(Status(StatusCode.OK))
 
         except:
@@ -118,14 +107,13 @@ def spark_observability(
         :return an integer that represents the number of records that a pyspark dataframe contains.
         """
 
-        span_id = f'{service_id}.df_rows_count'
-        current_span = ServiceSpan(tracer_id, span_id)
+        current_span = tracer.get_current_span()
 
         try:
             attributes = [
                 {'records_number': df.count()}
             ]
-            current_span.set_attributes(attributes)
+            ServiceSpan.set_attributes(current_span, attributes)
             current_span.set_span_status(Status(StatusCode.OK))
 
         except:

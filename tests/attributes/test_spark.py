@@ -1,9 +1,10 @@
 # Unit Tests to the Spark Attributes
 
 from unittest import TestCase
+from unittest import mock
 from unittest.mock import patch 
 from unittest.mock import MagicMock
-from unittest.mock import Mock
+from unittest.mock import call
 
 from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
@@ -11,53 +12,77 @@ from pyspark.rdd import RDD
 
 from opentelemetry.trace.status import Status
 from opentelemetry.trace.status import StatusCode
+from opentelemetry.sdk.trace import Span
 
-# from app.attributes.spark import spark_observability
+from app.attributes.spark import spark_observability
+from app.client.pipeline import PipelineTracer
+from app.client.service import ServiceSpan
 
-# class TestSparkAttributes(TestCase):
+from opentelemetry.sdk.trace import Tracer
 
-    # def test_spark_obs_handler(self):
+
+class TestSparkAttributes(TestCase):
+
+    @patch('opentelemetry.sdk.trace.Tracer')
+    def test_spark_observability_basic(self, mock_tracer_class):
+
+        spark = SparkSession.builder.getOrCreate()
+        df = spark.createDataFrame([(1, 2, 3)], ['a', 'b', 'c'])
+
+        mock_span_instance = MagicMock(spec=Span)
+        mock_tracer_class.start_as_current_span.return_value = mock_span_instance
+
+        service_id = 'Databricks'
+        spark_observability(df, mock_tracer_class, service_id)
+
+        expected = [
+            call.set_attributes(mock_span_instance, [{'columns': ['a', 'b', 'c']}]),
+            call.set_attributes(mock_span_instance, [{'columns_count': 3}]),
+            # call(spark_observability.),
+            # call(),
+            # call(df.colums)
+        ]
+        actual = mock_span_instance.mock_calls
+
+        self.assertCountEqual(actual, expected)
+
+
+    # @patch('opentelemetry.sdk.trace.Tracer')
+    # def test_spark_observability_basic(self, mock_tracer_class):
+
     #     spark = SparkSession.builder.getOrCreate()
-    #     df = spark.createDataFrame(
-    #         [
-    #             (1, "foo"),
-    #             (2, "bar"),
-    #         ],
-    #         ["id", "label"]
-    #     )
+    #     df = spark.createDataFrame([(1, 2, 3)], ['a', 'b', 'c'])
 
-    #     tracer_id = 'test_tracer'
-    #     service_id = 'test_service'
-    #     spark_obs = spark_observability(df, tracer_id, service_id)
+    #     mock_span_instance = MagicMock(spec=Span)
+    #     mock_span_instance.set_status.return_value = MagicMock(spec=Status)
 
-    # @patch('app.client.pipeline.PipelineTracer')
-    # def test_get_df_columns_basic(self, mock_pipeline_tracer):
+    #     mock_enter = MagicMock()
+    #     mock_enter.return_value = mock_span_instance
 
-    #     spark = SparkSession.builder.getOrCreate()
-    #     df = spark.createDataFrame(
-    #         [
-    #             (1, "foo"),
-    #             (2, "bar"),
-    #         ],
-    #         ["id", "label"]
-    #     )
+    #     mock_tracer_instance = mock_tracer_class.return_value
+    #     mock_tracer_instance.start_as_current_span.return_value.__enter__ = mock_enter
 
-    #     tracer_id = 'test_tracer'
-    #     service_id = 'test_service'
-    #     spark_obs = spark_observability(df, tracer_id, service_id)
+    #     # Simulate the _df_rows_count function with a MagicMock
+    #     mock_df_rows_count = MagicMock()
+    #     # Set up the return value or side effects for the mocked function
+    #     mock_df_rows_count.return_value = [{'records_number': 1}]
 
-    #     mock_pipeline_tracer.assert_called_once_with(tracer_id)
-    #     mock_pipeline_tracer.return_value.get_tracer.assert_called_once_with()
+    #     # Assign the mocked function to the local namespace where it's used
+    #     with patch('app.attributes.spark._df_rows_count', mock_df_rows_count):
+    #         service_id = 'Databricks'
+    #         spark_observability(df, mock_tracer_instance, service_id)
 
-    #     mock_tracer = mock_pipeline_tracer.return_value.get_tracer.return_value
-    #     mock_tracer.add_event.assert_called_once_with(
-    #         'get_df_columns',
-    #         {
-    #             'columns': ['id', 'label'],
-    #             'columns_count': 2
-    #         }
-    #     )
+    #         expected = [
+    #             call.set_attributes(mock_span_instance, [{'columns': ['a', 'b', 'c']}]),
+    #             call.set_attributes(mock_span_instance, [{'columns_count': 3}]),
+    #             call.set_attributes(mock_span_instance, [{'records_number': 1}]),  # Mocked call
+    #         ]
+    #         actual = mock_span_instance.mock_calls
 
+    #         self.assertCountEqual(actual, expected)
+
+
+    # TODO. test the exception case
     # def test_get_df_columns_complex(self):
     #     pass
 
@@ -66,27 +91,3 @@ from opentelemetry.trace.status import StatusCode
 
     # def test_df_rows_count_complex(self):
     #     pass
-
-
-    # def test_get_df_columns(self):
-
-    #     # spark = SparkSession.builder.getOrCreate()
-    #     # df = spark.createDataFrame(
-    #     #     [
-    #     #         (1, "foo"),
-    #     #         (2, "bar"),
-    #     #     ],
-    #     #     ["id", "label"]
-    #     # )
-
-
-    #     mock_df = Mock(spec=DataFrame)
-    #     tracer_id = "test_tracer"
-    #     service_id = "test_service"
-
-    #     with patch("app.client.ServiceSpan") as mock_service_span:
-    #         spark_observability(mock_df, tracer_id, service_id)
-
-    #         mock_service_span.assert_called_with(tracer_id, f'{service_id}.df_columns')
-    #         mock_service_span.return_value.set_attributes.assert_called_once()
-    #         mock_service_span.return_value.set_span_status.assert_called_once()

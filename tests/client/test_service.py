@@ -23,16 +23,15 @@ class TestServiceSpan(TestCase):
         mock_span_instance = Mock(spec=Span)
         mock_service_span.return_value = mock_span_instance
 
-        service_span = ServiceSpan("test_tracer_id", mock_span_instance)
-        service_span.set_attributes(attributes)
+        ServiceSpan.set_attributes(mock_span_instance, attributes)
 
-        # Verify that the set_attribute method was called with the expected arguments
-        expected_calls = [
+        expected = [
             mock.call.set_attribute('quote_consumed', 100),
             mock.call.set_attribute('jobs_running', 10)
         ]
+        actual = mock_span_instance.mock_calls
 
-        self.assertEqual(mock_span_instance.mock_calls, expected_calls)
+        self.assertEqual(actual, expected)
     
     @patch('app.client.service.ServiceSpan')
     def test_add_events_basic(self, mock_service_span):
@@ -45,10 +44,8 @@ class TestServiceSpan(TestCase):
             mock_span_instance = Mock(spec=Span)
             mock_service_span.return_value = mock_span_instance
     
-            service_span = ServiceSpan("test_tracer_id", mock_span_instance)
-            service_span.add_events(events)
+            ServiceSpan.add_events(mock_span_instance, events)
     
-            # Verify that the add_event method was called with the expected arguments
             expected_calls = [
                 mock.call.add_event('test_event_1'),
                 mock.call.add_event('test_event_2')
