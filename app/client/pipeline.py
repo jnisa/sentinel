@@ -103,8 +103,7 @@ class PipelineTracer:
         except:
             raise Exception(
                 "Invalid exporter type provided. The only types available are: CONSOLE and MEMORY"
-            )
-        
+            )  
 
     def _create_processor(self, exporter: TracerExporterType) -> TracerProcessorType:
         """
