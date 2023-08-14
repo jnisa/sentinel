@@ -53,20 +53,20 @@ class PipelineTracer:
         return self._tracer_id
     
     @property
-    def processor_type(self) -> Optional[str]:
+    def processor_type(self) -> TracerProcessorType:
         """
         Retrieve the processor type under usage.
         """
 
-        return self._processor_type
+        return getattr(TracerProcessorType, self._processor_type)
     
     @property
-    def exporter_type(self) -> Optional[str]:
+    def exporter_type(self) -> TracerExporterType:
         """
         Retrieve the exporter type under usage.
         """
 
-        return self._exporter_type
+        return getattr(TracerExporterType, self._exporter_type)
 
     def get_tracer(self) -> TracerProvider:
         """

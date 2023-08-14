@@ -24,6 +24,28 @@ class TestPipelineTracer(TestCase):
 
         self.assertEqual(actual, expected)
 
+    def test_processor_type_property(self):
+        
+        tracer_id = "test_tracer_id"
+
+        pipeline_tracer = PipelineTracer(tracer_id)
+
+        expected = TracerProcessorType.BATCH
+        actual = pipeline_tracer.processor_type
+
+        self.assertEqual(actual, expected)
+
+    def test_exporter_type_property(self):
+        
+        tracer_id = "test_tracer_id"
+
+        pipeline_tracer = PipelineTracer(tracer_id)
+
+        expected = TracerExporterType.CONSOLE
+        actual = pipeline_tracer.exporter_type
+
+        self.assertEqual(actual, expected)
+
     def test_get_tracer(self):
         
         tracer_id = "test_tracer_id"

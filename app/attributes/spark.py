@@ -2,12 +2,10 @@
 # Spark operations
 
 from typing import Union
-from typing import List, Dict
 from typing import Optional
 
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
-from opentelemetry.sdk.trace import Span
 from opentelemetry.sdk.trace import Tracer
 
 from pyspark.sql import DataFrame
@@ -38,7 +36,7 @@ class SparkObservability:
             service_id: str
         ):
         """
-        Handler function that can be seen as the heart of the operation.
+        Handler/Initialization function that can be seen as the heart of the operation.
 
         This function will be responsible for setting up the attributes that will be used throuhgout
         a first analysis to the type of object_span received. After that, it will call the functions
@@ -57,19 +55,14 @@ class SparkObservability:
 
         # if the object_span is a dataframe, then call the df related functions
         if isinstance(object_span, DataFrame):
-            # TODO. add some events here
-            self._df_columns(object_span)
-            self._df_rows_count(object_span)
+            self._df_features(object_span)
 
         # if the object_span is a SparkSession, then call the spark_session related functions
         elif isinstance(object_span, SparkSession):
-            # TODO. add some events here
-            # TODO. replace this pass by the functions that are meant to be called
-            pass
+            self._ss_specs(object_span)
 
         # if the object_span is a RDD, then call the rdd related functions
         elif isinstance(object_span, RDD):
-            # TODO. add some events here
             # TODO. replace this pass by the functions that are meant to be called
             pass
 
@@ -87,7 +80,7 @@ class SparkObservability:
         return self._service_id
     
     @property
-    def object_type(self) -> Optional[str]:
+    def object_type(self) -> Union[DataFrame, RDD, SparkSession]:
         """
         Getter function for the object_type attribute.
 
@@ -96,7 +89,7 @@ class SparkObservability:
 
         return type(self._object_span)
 
-    def _df_columns(self, df: DataFrame):
+    def _df_features(self, df: DataFrame):
         """
         Get the columns of a dataframe.
 
@@ -106,42 +99,34 @@ class SparkObservability:
         :param df: the dataframe that will be used to retrieve the columns.
         """
 
-        with self._tracer.start_as_current_span(name=f'{self._service_id}.df_columns') as span:
+        span_id = f'{self._service_id}.df_attributes'
+        with self._tracer.start_as_current_span(name=span_id) as span:
 
-            try:
-                attributes = [
-                    {'columns': df.columns},
-                    {'columns_count': len(df.columns)}
-                ]
-                ServiceSpan.set_attributes(span, attributes)
-                span.set_span_status(Status(StatusCode.OK))
+            # TODO. add more attributes related with the dataframe
+            attributes = [
+                {'columns': df.columns},
+                {'columns_count': len(df.columns)},
+                {'records_count': df.count()},
+            ]
+            ServiceSpan.set_attributes(span, attributes)
+            # TODO. status seems to make more sense on requests, not on attributes
+            span.set_span_status(Status(StatusCode.OK))
 
-            except:
-                span.set_span_status(Status(StatusCode.ERROR))
-
-    def _df_rows_count(self, df: DataFrame):
+    def _ss_specs(self, ss: SparkSession):
         """
-        Determine the number of rows of a dataframe.
+        Get all the configuration specs that have to do with the Spark session that is being used
+        on all the spark operations.
 
-        After determining the number of rows of the dataframe provided, the function will
-        set the number of rows as attributes of the current_span.
-
-        :param df: the dataframe that will be used to determine the number of rows.
-        :return an integer that represents the number of records that a pyspark dataframe contains.
+        :param ss: the SparkSession that will be used to retrieve the version.
         """
 
-        with self._tracer.start_as_current_span(name=f'{self._service_id}.df_rows_count') as span:
+        span_id = f'{self._service_id}.SparkSession_specs' 
+        with self._tracer.start_as_current_span(name=span_id) as span:
 
-            try:
-                attributes = [
-                    {'records_number': df.count()}
-                ]
-                ServiceSpan.set_attributes(span, attributes)
-                span.set_span_status(Status(StatusCode.OK))
+            attributes = [{conf: val} for conf, val in ss.sparkContext.getConf().getAll()]
+            ServiceSpan.set_attributes(span, attributes)
+            # TODO. status seems to make more sense on requests, not on attributes
+            span.set_span_status(Status(StatusCode.OK))
 
-            except:
-                # raise Exception('The number of rows of the dataframe could not be retrieved.')
-                span.set_span_status(Status(StatusCode.ERROR))
 
-    # TODO. add more attributes related with the SparkSession
     # TODO. add more atributes related with the RDD
