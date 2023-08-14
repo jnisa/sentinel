@@ -4,7 +4,9 @@ from unittest import TestCase
 from unittest.mock import patch 
 from unittest.mock import MagicMock
 
+from pyspark import SparkContext
 from pyspark.sql import SparkSession
+from pyspark.rdd import RDD
 
 from opentelemetry.trace.status import Status
 from opentelemetry.trace.status import StatusCode
@@ -84,6 +86,9 @@ class TestSparkObservability(TestCase):
 
         observability._df_features(df)
 
+        # stop the spark session
+        spark.stop()
+
         # check if the attributes are set
         expected = [
             {'columns': ['a', 'b', 'c']},
@@ -124,6 +129,38 @@ class TestSparkObservability(TestCase):
         expected = [
             {'spark.app.name': 'MyApp'},
             {'spark.executor.cores': '2'}
+        ]
+        actual = mock_set_attributes.call_args_list[0][0][1]
+        self.assertEqual(actual, expected)
+
+        # check the status is set -  TO BE CONSIDERED
+        status = mock_span.set_span_status.call_args[0][0]
+        self.assertEqual(status.status_code, StatusCode.OK)
+
+    @patch('app.client.service.ServiceSpan.set_attributes')
+    def test__rdd_features(self, mock_set_attributes):
+            
+        spark = SparkContext('local', 'test_rdd')
+        rdd = spark.parallelize([(1, 2, 3), (4, 5, 6), (7, 8, 9)])
+
+        mock_span = MagicMock(spec=Span)
+        mock_span.set_span_status = MagicMock()
+        mock_tracer = MagicMock(spec=Tracer)
+        mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
+
+        service_id = 'function_app'
+        observability = SparkObservability(rdd, mock_tracer, service_id)
+
+        observability._rdd_features(rdd)
+
+        # stop the spark session
+        spark.stop()
+
+        # check if the attributes are set
+        expected = [
+            {'id': None},
+            {'count': 3},
+            {'partitions': 1}
         ]
         actual = mock_set_attributes.call_args_list[0][0][1]
         self.assertEqual(actual, expected)

@@ -22,7 +22,7 @@ class SparkObservability:
 
     These can be not only attributes related with the objects that are being targeted 
     on the multiple operations performed, but it can also be attributes related with
-    the Spark cluster itself, e.g. (number of nodes, number of cores, etc.).
+    the Spark operations.
 
     :param object_span: Span that will be used to monitorize the object that is being targeted
     :param tracer_id: The id of the tracer where the span is settled
@@ -64,7 +64,7 @@ class SparkObservability:
         # if the object_span is a RDD, then call the rdd related functions
         elif isinstance(object_span, RDD):
             # TODO. replace this pass by the functions that are meant to be called
-            pass
+            self._rdd_features(object_span)
 
         else:
             raise Exception('The object_span is not a valid object type to be monitored.')
@@ -121,6 +121,7 @@ class SparkObservability:
         """
 
         span_id = f'{self._service_id}.SparkSession_specs' 
+
         with self._tracer.start_as_current_span(name=span_id) as span:
 
             attributes = [{conf: val} for conf, val in ss.sparkContext.getConf().getAll()]
@@ -129,4 +130,23 @@ class SparkObservability:
             span.set_span_status(Status(StatusCode.OK))
 
 
-    # TODO. add more atributes related with the RDD
+    def _rdd_features(self, rdd: RDD):
+        """
+        Return RDD related attributes.
+
+        :param rdd: the RDD that will be used to retrieve the attributes.
+        """
+
+        span_id = f'{self._service_id}.rdd_attributes'
+        
+        with self._tracer.start_as_current_span(name=span_id) as span:
+            
+            # TODO. add more attributes related with the RDD
+            attributes = [
+                {'id': rdd.name()},
+                {'count': rdd.count()},
+                {'partitions': rdd.getNumPartitions()}
+            ]
+            ServiceSpan.set_attributes(span, attributes)
+            # TODO. status seems to make more sense on requests, not on attributes
+            span.set_span_status(Status(StatusCode.OK))
