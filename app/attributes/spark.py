@@ -3,6 +3,7 @@
 
 from typing import Union
 from typing import List, Dict
+from typing import Optional
 
 from opentelemetry.trace import Status
 from opentelemetry.trace import StatusCode
@@ -14,14 +15,11 @@ from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
 from app.client.service import ServiceSpan
+from app.client.pipeline import PipelineTracer
 
-def spark_observability(
-        object_span: Union[DataFrame, RDD, SparkSession],
-        tracer: Tracer,
-        service_id: str
-):
+class SparkObservability:
     """
-    Nested function that will handle all the attributes that will be used to monitor any Spark
+    Class that will handle all the attributes that will be used to monitor any Spark
     tasks running on our platform.
 
     These can be not only attributes related with the objects that are being targeted 
@@ -33,11 +31,12 @@ def spark_observability(
     :param service_id: The id of the service that is under monitorization
     """
 
-    # TODO. evaluate if this should be maintained or not
-    # # get the underlying tracer of the spans that will be created
-    # tracer = PipelineTracer(tracer_id).get_tracer()
-
-    def _handler(object_span):
+    def __init__(
+            self,
+            object_span: Union[DataFrame, RDD, SparkSession],
+            tracer: Tracer,
+            service_id: str
+        ):
         """
         Handler function that can be seen as the heart of the operation.
 
@@ -48,13 +47,19 @@ def spark_observability(
         
         :param object_span: the object that will submitted to the monitorization process (can be
         a dataframe, a RDD, a SparkSession, etc.)
+        :param tracer: on top of which the spans will be created
+        :param service_id: the id of the service that is under monitorization
         """
+
+        self._service_id = service_id
+        self._tracer = tracer
+        self._object_span = object_span
 
         # if the object_span is a dataframe, then call the df related functions
         if isinstance(object_span, DataFrame):
             # TODO. add some events here
-            _get_df_columns(object_span)
-            _df_rows_count(object_span)
+            self._df_columns(object_span)
+            self._df_rows_count(object_span)
 
         # if the object_span is a SparkSession, then call the spark_session related functions
         elif isinstance(object_span, SparkSession):
@@ -71,8 +76,27 @@ def spark_observability(
         else:
             raise Exception('The object_span is not a valid object type to be monitored.')
 
-    @tracer.start_as_current_span(name=f'{service_id}.df_columns')
-    def _get_df_columns(df: DataFrame) -> List[Dict]:
+    @property
+    def service_id(self) -> Optional[str]:
+        """
+        Getter function for the service_id attribute.
+
+        :return: the service_id attribute
+        """
+
+        return self._service_id
+    
+    @property
+    def object_type(self) -> Optional[str]:
+        """
+        Getter function for the object_type attribute.
+
+        :return: the object_type attribute
+        """
+
+        return type(self._object_span)
+
+    def _df_columns(self, df: DataFrame):
         """
         Get the columns of a dataframe.
 
@@ -82,21 +106,20 @@ def spark_observability(
         :param df: the dataframe that will be used to retrieve the columns.
         """
 
-        current_span = tracer.get_current_span()
+        with self._tracer.start_as_current_span(name=f'{self._service_id}.df_columns') as span:
 
-        try:
-            attributes = [
-                {'columns': df.columns},
-                {'columns_count': len(df.columns)}
-            ]
-            ServiceSpan.set_attributes(current_span, attributes)
-            current_span.set_span_status(Status(StatusCode.OK))
+            try:
+                attributes = [
+                    {'columns': df.columns},
+                    {'columns_count': len(df.columns)}
+                ]
+                ServiceSpan.set_attributes(span, attributes)
+                span.set_span_status(Status(StatusCode.OK))
 
-        except:
-            current_span.set_span_status(Status(StatusCode.ERROR))
+            except:
+                span.set_span_status(Status(StatusCode.ERROR))
 
-    @tracer.start_as_current_span(name=f'{service_id}.df_rows_count')
-    def _df_rows_count(df: DataFrame) -> List[Dict]:
+    def _df_rows_count(self, df: DataFrame):
         """
         Determine the number of rows of a dataframe.
 
@@ -107,19 +130,18 @@ def spark_observability(
         :return an integer that represents the number of records that a pyspark dataframe contains.
         """
 
-        current_span = tracer.get_current_span()
+        with self._tracer.start_as_current_span(name=f'{self._service_id}.df_rows_count') as span:
 
-        try:
-            attributes = [
-                {'records_number': df.count()}
-            ]
-            ServiceSpan.set_attributes(current_span, attributes)
-            current_span.set_span_status(Status(StatusCode.OK))
+            try:
+                attributes = [
+                    {'records_number': df.count()}
+                ]
+                ServiceSpan.set_attributes(span, attributes)
+                span.set_span_status(Status(StatusCode.OK))
 
-        except:
-            current_span.set_span_status(Status(StatusCode.ERROR))
+            except:
+                # raise Exception('The number of rows of the dataframe could not be retrieved.')
+                span.set_span_status(Status(StatusCode.ERROR))
 
     # TODO. add more attributes related with the SparkSession
     # TODO. add more atributes related with the RDD
-
-    _handler(object_span)

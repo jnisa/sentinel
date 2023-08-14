@@ -46,9 +46,10 @@ class TestServiceSpan(TestCase):
     
             ServiceSpan.add_events(mock_span_instance, events)
     
-            expected_calls = [
+            expected = [
                 mock.call.add_event('test_event_1'),
                 mock.call.add_event('test_event_2')
             ]
+            actual = mock_span_instance.mock_calls
     
-            self.assertEqual(mock_span_instance.mock_calls, expected_calls)
+            self.assertEqual(actual, expected)
