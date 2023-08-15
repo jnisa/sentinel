@@ -1,9 +1,6 @@
 # Class that will be used to grant the monitorization of pipelines
 # currently running on the platform targeted by this project.
 
-from typing import Optional
-
-from opentelemetry import trace
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace import TracerProvider
 

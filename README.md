@@ -43,7 +43,7 @@ We have two hierarchical dimensions on this solution, both of which are part of 
 2. `spans` - represents a unit of work or operation. In this specific case, leverage the following naming convention:
 
 ````
-{service_name}.{resource_type_monitored}
+{service_name}.{resource_type_monitored}.{OPTIONAL_var_name}
 ````
 
 this point out the services where these spans are being created and the type of attributes they provide. Here are a few examples: 

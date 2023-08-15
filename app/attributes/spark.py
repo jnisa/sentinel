@@ -4,8 +4,6 @@
 from typing import Union
 from typing import Optional
 
-from opentelemetry.trace import Status
-from opentelemetry.trace import StatusCode
 from opentelemetry.sdk.trace import Tracer
 
 from pyspark.sql import DataFrame
@@ -13,6 +11,7 @@ from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
 from app.client.service import ServiceSpan
+from app.attributes.auxiliars import get_id
 
 class SparkObservability:
     """
@@ -33,7 +32,7 @@ class SparkObservability:
             object_span: Union[DataFrame, RDD, SparkSession],
             tracer: Tracer,
             service_id: str,
-            var_id: str = None
+            var_id: Optional[str] = None
         ):
         """
         Handler/Initialization function that can be seen as the heart of the operation.
@@ -59,27 +58,15 @@ class SparkObservability:
 
         # if the object_span is a dataframe, then call the df related functions
         if isinstance(object_span, DataFrame):
-            span_id = '.'.join(filter(
-                is_not_null, 
-                [f'{self._service_id}', 'df', f'{self._var_id}']
-            ))
-            self._df_features(object_span, span_id)
+            self._df_features(object_span, get_id(service_id, 'df', var_id))
 
         # if the object_span is a SparkSession, then call the spark_session related functions
         elif isinstance(object_span, SparkSession):
-            span_id = '.'.join(filter(
-                is_not_null, 
-                [f'{self._service_id}', 'SparkSession', f'{self._var_id}']
-            ))
-            self._ss_specs(object_span, span_id)
+            self._ss_specs(object_span, get_id(service_id, 'SparkSession', var_id))
 
         # if the object_span is a RDD, then call the rdd related functions
         elif isinstance(object_span, RDD):
-            span_id = '.'.join(filter(
-                is_not_null, 
-                [f'{self._service_id}', 'rdd', f'{self._var_id}']
-            ))
-            self._rdd_features(object_span, span_id)
+            self._rdd_features(object_span, get_id(service_id, 'rdd', var_id))
 
         else:
             raise Exception('The object_span is not a valid object type to be monitored.')

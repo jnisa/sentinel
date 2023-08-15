@@ -1,8 +1,6 @@
 # Bring all the components together and run the tracer and span.
 # This will allows us to see if the all the components are working together.
 
-import pdb
-
 from app.client.pipeline import PipelineTracer
 from app.attributes.spark import SparkObservability
 
