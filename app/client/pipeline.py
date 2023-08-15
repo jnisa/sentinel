@@ -4,10 +4,12 @@
 from typing import Optional
 
 from opentelemetry import trace
+from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace import TracerProvider
 
-from ..constants.tracer import TracerProcessorType
-from ..constants.tracer import TracerExporterType
+from app.constants.tracer import TracerProcessorType
+from app.constants.tracer import TracerExporterType
+
 
 class PipelineTracer:
     """
@@ -24,7 +26,7 @@ class PipelineTracer:
             tracer_id: str, 
             processor_type: str = 'BATCH', 
             exporter_type: str = 'CONSOLE'
-        ) -> TracerProvider:
+        ) -> Tracer:
         """
         Initialize the PipelineTracer class.
 
@@ -41,8 +43,8 @@ class PipelineTracer:
         processor = self._create_processor(self._set_exporter_type())
         provider.add_span_processor(processor)
 
-        self.global_tracer = trace.set_tracer_provider(provider)
-
+        trace.set_tracer_provider(provider)
+        self.baseline_trace = trace
 
     @property
     def tracer_id(self) -> Optional[str]:
@@ -68,7 +70,7 @@ class PipelineTracer:
 
         return getattr(TracerExporterType, self._exporter_type)
 
-    def get_tracer(self) -> TracerProvider:
+    def get_tracer(self) -> Tracer:
         """
         Get a opentelemetry tracer.
 
@@ -84,7 +86,7 @@ class PipelineTracer:
         :return: a tracer configured according the arguments provided to this class
         """
 
-        return self.global_tracer.get_tracer(self._tracer_id)
+        return self.baseline_trace.get_tracer(self._tracer_id)
     
     def _set_exporter_type(self) -> TracerExporterType:
         """

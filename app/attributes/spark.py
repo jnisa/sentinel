@@ -13,7 +13,6 @@ from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
 from app.client.service import ServiceSpan
-from app.client.pipeline import PipelineTracer
 
 class SparkObservability:
     """
@@ -33,7 +32,8 @@ class SparkObservability:
             self,
             object_span: Union[DataFrame, RDD, SparkSession],
             tracer: Tracer,
-            service_id: str
+            service_id: str,
+            var_id: str = None
         ):
         """
         Handler/Initialization function that can be seen as the heart of the operation.
@@ -46,25 +46,40 @@ class SparkObservability:
         :param object_span: the object that will submitted to the monitorization process (can be
         a dataframe, a RDD, a SparkSession, etc.)
         :param tracer: on top of which the spans will be created
-        :param service_id: the id of the service that is under monitorization
+        :param service_id: the id of the service where this object is being used
+        :param var_id: the id of the variable that is under monitorization
         """
 
         self._service_id = service_id
         self._tracer = tracer
         self._object_span = object_span
+        self._var_id = var_id
+
+        is_not_null = lambda x: x is not None
 
         # if the object_span is a dataframe, then call the df related functions
         if isinstance(object_span, DataFrame):
-            self._df_features(object_span)
+            span_id = '.'.join(filter(
+                is_not_null, 
+                [f'{self._service_id}', 'df', f'{self._var_id}']
+            ))
+            self._df_features(object_span, span_id)
 
         # if the object_span is a SparkSession, then call the spark_session related functions
         elif isinstance(object_span, SparkSession):
-            self._ss_specs(object_span)
+            span_id = '.'.join(filter(
+                is_not_null, 
+                [f'{self._service_id}', 'SparkSession', f'{self._var_id}']
+            ))
+            self._ss_specs(object_span, span_id)
 
         # if the object_span is a RDD, then call the rdd related functions
         elif isinstance(object_span, RDD):
-            # TODO. replace this pass by the functions that are meant to be called
-            self._rdd_features(object_span)
+            span_id = '.'.join(filter(
+                is_not_null, 
+                [f'{self._service_id}', 'rdd', f'{self._var_id}']
+            ))
+            self._rdd_features(object_span, span_id)
 
         else:
             raise Exception('The object_span is not a valid object type to be monitored.')
@@ -89,7 +104,7 @@ class SparkObservability:
 
         return type(self._object_span)
 
-    def _df_features(self, df: DataFrame):
+    def _df_features(self, df: DataFrame, span_id: str):
         """
         Get the columns of a dataframe.
 
@@ -97,9 +112,9 @@ class SparkObservability:
         the columns as attributes of the current_span.
 
         :param df: the dataframe that will be used to retrieve the columns.
+        :param span_id: the id of the span that will be used to set the attributes.
         """
 
-        span_id = f'{self._service_id}.df_attributes'
         with self._tracer.start_as_current_span(name=span_id) as span:
 
             # TODO. add more attributes related with the dataframe
@@ -109,10 +124,11 @@ class SparkObservability:
                 {'records_count': df.count()},
             ]
             ServiceSpan.set_attributes(span, attributes)
-            # TODO. status seems to make more sense on requests, not on attributes
-            span.set_span_status(Status(StatusCode.OK))
 
-    def _ss_specs(self, ss: SparkSession):
+            # TODO. status seems to make more sense on requests, not on attributes
+            # span.set_span_status(Status(StatusCode.OK))
+
+    def _ss_specs(self, ss: SparkSession, span_id: str):
         """
         Get all the configuration specs that have to do with the Spark session that is being used
         on all the spark operations.
@@ -120,25 +136,22 @@ class SparkObservability:
         :param ss: the SparkSession that will be used to retrieve the version.
         """
 
-        span_id = f'{self._service_id}.SparkSession_specs' 
-
         with self._tracer.start_as_current_span(name=span_id) as span:
 
             attributes = [{conf: val} for conf, val in ss.sparkContext.getConf().getAll()]
             ServiceSpan.set_attributes(span, attributes)
+
             # TODO. status seems to make more sense on requests, not on attributes
-            span.set_span_status(Status(StatusCode.OK))
+            # span.set_span_status(Status(StatusCode.OK))
 
 
-    def _rdd_features(self, rdd: RDD):
+    def _rdd_features(self, rdd: RDD, span_id: str):
         """
         Return RDD related attributes.
 
         :param rdd: the RDD that will be used to retrieve the attributes.
         """
 
-        span_id = f'{self._service_id}.rdd_attributes'
-        
         with self._tracer.start_as_current_span(name=span_id) as span:
             
             # TODO. add more attributes related with the RDD
@@ -148,5 +161,6 @@ class SparkObservability:
                 {'partitions': rdd.getNumPartitions()}
             ]
             ServiceSpan.set_attributes(span, attributes)
+
             # TODO. status seems to make more sense on requests, not on attributes
-            span.set_span_status(Status(StatusCode.OK))
+            # span.set_span_status(Status(StatusCode.OK))

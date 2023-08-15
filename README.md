@@ -64,6 +64,7 @@ This section answers the question: _"How does this all work together?"_ and the 
 ### **4. Project Organization**
 
 ### **5. Actions per hierarchy**
+This framework leverages Manual Instrumentation completely.
 
 #### **5.a. PipelineTracer**
 This unit is responsible for the configuration of the tracer (actions like the configuration of the type processor and exporter). A baseline tracer is created and from that one, multiple tracers with different tracer_ids - defined by the user -, are created.
@@ -102,4 +103,6 @@ There are still some points that we should tackle:
 
 - test this solution in a 'production' scenario i.e. leverage it in resources like Azure Function App, Databricks notebooks, and/or scripts and see the behavior. As an example, we could clone the streaming pipeline that is now in production but make some adaptations so that this clone leverages the solution produced;
 
-- gather with the Engineering team to define a set of attributes that would be nice to add to this solution (billing metrics and performance - which were already mentioned in some calls - should be held into account).
+- gather with the Engineering team to define a set of attributes that would be nice to add to this solution (billing metrics and performance - which were already mentioned in some calls - should be held into account);
+
+- analyze if Zipkin can be a good option to visualize this observability data.
