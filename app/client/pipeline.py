@@ -23,36 +23,25 @@ class PipelineTracer:
 
     def __init__(
             self, 
-            tracer_id: str, 
             processor_type: str = 'BATCH', 
             exporter_type: str = 'CONSOLE'
         ) -> Tracer:
         """
         Initialize the PipelineTracer class.
 
-        :param tracer_id: The id of the tracer that will be used to monitorize the pipeline.
         :param processor_type: The type of processor that will be used by the tracer.
         :param exporter_type: The type of exporter that will be used by the tracer.
         """
 
-        self._tracer_id = tracer_id
         self._processor_type = processor_type
         self._exporter_type = exporter_type
 
         provider = TracerProvider()
+
         processor = self._create_processor(self._set_exporter_type())
         provider.add_span_processor(processor)
 
-        trace.set_tracer_provider(provider)
-        self.baseline_trace = trace
-
-    @property
-    def tracer_id(self) -> Optional[str]:
-        """
-        Retrieve the tracer_id under usage.
-        """
-
-        return self._tracer_id
+        self.baseline_trace = provider
     
     @property
     def processor_type(self) -> TracerProcessorType:
@@ -70,7 +59,7 @@ class PipelineTracer:
 
         return getattr(TracerExporterType, self._exporter_type)
 
-    def get_tracer(self) -> Tracer:
+    def get_tracer(self, tracer_id: str = __name__) -> Tracer:
         """
         Get a opentelemetry tracer.
 
@@ -83,10 +72,11 @@ class PipelineTracer:
         configuration features of the tracer, we can use this function to get access to the
         that specific tracer and then modify it.
 
+        :param tracer_id: the id of the tracer that we want to retrieve
         :return: a tracer configured according the arguments provided to this class
         """
 
-        return self.baseline_trace.get_tracer(self._tracer_id)
+        return self.baseline_trace.get_tracer(tracer_id)
     
     def _set_exporter_type(self) -> TracerExporterType:
         """
@@ -101,7 +91,7 @@ class PipelineTracer:
         """
 
         try:
-            return getattr(TracerExporterType, self._exporter_type)
+            return getattr(TracerExporterType, self._exporter_type)()
         except:
             raise Exception(
                 "Invalid exporter type provided. The only types available are: CONSOLE and MEMORY"

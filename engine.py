@@ -3,8 +3,8 @@
 
 import pdb
 
-from client.pipeline import PipelineTracer
-from attributes.spark import SparkObservability
+from app.client.pipeline import PipelineTracer
+from app.attributes.spark import SparkObservability
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
@@ -40,12 +40,10 @@ df = spark.createDataFrame(data=data, schema=schema)
 
 # second step, let's create a tracer
 tracer = PipelineTracer(
-    tracer_id='engine_test',
     processor_type='BATCH', # default value - illustration purposes
     exporter_type='CONSOLE' # default value - illustration purposes
-).get_tracer()
-
+).get_tracer('engine_test')
 
 # last and third step, let's retrive attributes from the spark Dataframe and session
 SparkObservability(spark, tracer, 'local_computer', 'test_session')
-# SparkObservability(df, tracer, 'local_computer', 'test_data')
+SparkObservability(df, tracer, 'local_computer', 'test_data')
