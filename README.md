@@ -13,8 +13,8 @@
 
 <div align="center">
 
-  <a href="code coverage">![coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)</a>
-  <a href="tests">![tests](https://img.shields.io/badge/tests-21%20passed%2C%200%20failed-brightgreen)</a>
+  <a href="code coverage">![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)</a>
+  <a href="tests">![tests](https://img.shields.io/badge/tests-22%20passed%2C%200%20failed-brightgreen)</a>
   <a href="opentelemetry version">![scala_version](https://img.shields.io/badge/opentelemetry-1.19.1-blue)</a>
   <a href="python version">![sbt_version](https://img.shields.io/badge/python-3.10.9-blue?logo=python&logoColor=white)</a>
 
@@ -49,6 +49,7 @@ We have two hierarchical dimensions on this solution, both of which are part of 
 this point out the services where these spans are being created and the type of attributes they provide. Here are a few examples: 
 
 
+**[UPDATE THESE EXAMPLES]**
 ````
 databricks.df_attributes
 databricks.SparkSession_specs

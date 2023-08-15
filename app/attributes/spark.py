@@ -16,7 +16,7 @@ from app.attributes.auxiliars import get_id
 class SparkObservability:
     """
     Class that will handle all the attributes that will be used to monitor any Spark
-    tasks running on our platform.
+    tasks running on the platform.
 
     These can be not only attributes related with the objects that are being targeted 
     on the multiple operations performed, but it can also be attributes related with
@@ -39,8 +39,7 @@ class SparkObservability:
 
         This function will be responsible for setting up the attributes that will be used throuhgout
         a first analysis to the type of object_span received. After that, it will call the functions
-        that will be responsible for setting up the observability attributes related with the 
-        object_span.
+        that will be responsible for setting up the observability attributes.
         
         :param object_span: the object that will submitted to the monitorization process (can be
         a dataframe, a RDD, a SparkSession, etc.)
@@ -53,8 +52,6 @@ class SparkObservability:
         self._tracer = tracer
         self._object_span = object_span
         self._var_id = var_id
-
-        is_not_null = lambda x: x is not None
 
         # if the object_span is a dataframe, then call the df related functions
         if isinstance(object_span, DataFrame):
@@ -93,10 +90,7 @@ class SparkObservability:
 
     def _df_features(self, df: DataFrame, span_id: str):
         """
-        Get the columns of a dataframe.
-
-        After retriving the columns from the dataframe provided, the function will set
-        the columns as attributes of the current_span.
+        Get attributes from a provided dataframe.
 
         :param df: the dataframe that will be used to retrieve the columns.
         :param span_id: the id of the span that will be used to set the attributes.
@@ -117,14 +111,15 @@ class SparkObservability:
 
     def _ss_specs(self, ss: SparkSession, span_id: str):
         """
-        Get all the configuration specs that have to do with the Spark session that is being used
-        on all the spark operations.
+        Get all the configuration specs from the Spark Session used.
 
         :param ss: the SparkSession that will be used to retrieve the version.
+        :param span_id: the id of the span that will be used to set the attributes.
         """
 
         with self._tracer.start_as_current_span(name=span_id) as span:
 
+            # TODO. filter the attributes that only add noise
             attributes = [{conf: val} for conf, val in ss.sparkContext.getConf().getAll()]
             ServiceSpan.set_attributes(span, attributes)
 
@@ -137,6 +132,7 @@ class SparkObservability:
         Return RDD related attributes.
 
         :param rdd: the RDD that will be used to retrieve the attributes.
+        :param span_id: the id of the span that will be used to set the attributes.
         """
 
         with self._tracer.start_as_current_span(name=span_id) as span:

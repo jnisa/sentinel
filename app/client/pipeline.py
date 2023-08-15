@@ -11,11 +11,11 @@ from app.constants.tracer import TracerExporterType
 class PipelineTracer:
     """
     Any kind of pipeline that is running on the platform targeted by this project will be
-    monitored by this class.
+    monitored by this class, by a tracer.
 
     There are multiple monitorization hierarchies targeted by this project and this is
     the first level of monitorization. Is the one that aggregates the remaining ones - these
-    being: service and process.
+    being the services and processes.
     """
 
     def __init__(
@@ -60,14 +60,12 @@ class PipelineTracer:
         """
         Get a opentelemetry tracer.
 
-        From the global tracer_provider - that is created by this class, taking into acccount
+        From the global baseline_trace - that is created by this class, taking into acccount
         the configuration features provided by the user - we can create a tracer that will
         be used to monitorize the pipeline with the tracer_id provided.
 
-        In case we want to retrieve an existing tracer - instead of creating a new one - we
-        should use this function. Also, if for any reason we want to modify one of the
-        configuration features of the tracer, we can use this function to get access to the
-        that specific tracer and then modify it.
+        In case we want to retrieve an existing tracer - instead of creating a new one - this
+        function can also be used to that effect.
 
         :param tracer_id: the id of the tracer that we want to retrieve
         :return: a tracer configured according the arguments provided to this class
@@ -81,8 +79,8 @@ class PipelineTracer:
 
         Any tracer that is created by this class will have an exporter attached to it. This
         exporter will be used to send the data that is being collected by the tracer to a
-        specific location. This function will be used to set the type of exporter that the
-        tracer will use.
+        specific location. Using this method will set the type of exporter that the tracer
+        will use.
 
         :return: the exporter type configured according the arguments provided to this class
         """
@@ -98,10 +96,10 @@ class PipelineTracer:
         """
         Attach a processor to the tracer.
 
-        The processor will be used to process the data that is being collected by the tracer.
-        This function will be used to create a processor and attach it to the tracer.
+        The processor will be used to process the data that is being collected by the tracer. This
+        function attaches the processor to the baseline_trace.
         
-        :param exporter: the exporter that will be used by the processor
+        :param exporter: the exporter type that will be used by the processor
         :return: a processor configured according the arguments provided to this class
         """
 
