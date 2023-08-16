@@ -3,4 +3,4 @@ source = .
 omit = app/constants/**,tests/**,setup.py
 
 [report]
-omit = app/constants/**,tests/**,setup.py
+omit = app/constants/**,tests/**,setup.py,./engine.py

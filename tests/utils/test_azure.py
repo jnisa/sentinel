@@ -1,9 +1,12 @@
 # Unit Tests to the Azure Utils
 
+import pdb
+
 from unittest import TestCase
 from unittest import mock
 from unittest.mock import patch, MagicMock
 
+from azure.identity import DefaultAzureCredential
 from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 
 from app.utils.azure import AzureClient
@@ -20,6 +23,17 @@ class TestAzureClient(TestCase):
         
         expected = f"https://test_kv.vault.azure.net"
         actual = azure_client.kv_client.vault_url
+
+        self.assertEqual(actual, expected)
+
+    def test_azure_client_credential_property(self):
+
+        kv_id = "test_kv"
+
+        azure_client = AzureClient(kv_id)
+
+        expected = DefaultAzureCredential
+        actual = type(azure_client.credential)
 
         self.assertEqual(actual, expected)
 

@@ -8,10 +8,12 @@ from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
 class AzureClient:
     """
     Class that will contain multiple functions to interact with some of the Azure services 
-    that we use throughout our platform.
+    that are leveraged by the platorm running in this cloud provider.
 
     Up to this point, the functions that we will be using are:
     1. get secrets from Azure Key Vault;
+    2. create a credentials object to be used by the Azure Monitor Trace Exporter.
+    3. setup the Azure Monitor Trace Exporter.
 
     TODO. consider the expansion of this module to encompass the following capabilities:
     1. set an external consumer and/or producer Azure Event Hub;
