@@ -48,26 +48,29 @@ We have two hierarchical dimensions on this solution, both of which are part of 
 
 this point out the services where these spans are being created and the type of attributes they provide. Here are a few examples: 
 
-
-**[UPDATE THESE EXAMPLES]**
 ````
-databricks.df_attributes
-databricks.SparkSession_specs
-azure_function_app.api_extracted_data
+databricks.df.LVI
+databricks.df
+databricks.SparkSession.eda
+azure_function_app.api.maritime
 ````
 
 ### **3. Concept of Action**
 
 This section answers the question: _"How does this all work together?"_ and the next image pictures the relationships that are established between the multiple components.
 
-**[ADD_IMAGE_HERE]**
+<p align='center'>
+    <img src='./.docs/flow.png' width='75%'>
+</p>
 
-### **4. Project Organization**
+The middle sector - where the heart of the operation takes action -, is responsible for calling all the modules upon which this solution is built on top of. This sector is the sector where all the attributes are defined as well as the structure of the span (more specifically the naming convention).
 
-### **5. Actions per hierarchy**
+The course of action starts with this sector getting the resource that is at the top of the hierarchy - the tracer. It is on top of this resource that the span will be created and from the framework is in position to call the Service Span to add the attributes determined from the resources provided by the user.
+
+### **4. Actions per hierarchy**
 This framework leverages Manual Instrumentation completely.
 
-#### **5.a. PipelineTracer**
+#### **4.a. PipelineTracer**
 This unit is responsible for the configuration of the tracer (actions like the configuration of the type processor and exporter). A baseline tracer is created and from that one, multiple tracers with different tracer_ids - defined by the user -, are created.
 
 Here are the following actions supported:
@@ -76,7 +79,7 @@ Here are the following actions supported:
 - `_set_exporter_type`: at the moment only one exporter type is supported: `CONSOLE`;
 - `_create_processor`: there's two kinds of processors that are supported: `BATCH` and `SIMPLE`.
 
-#### **5.b. ServiceSpan**
+#### **4.b. ServiceSpan**
 The ServiceSpan is essentially a wrapper around two core actions on the span level: set_attribute and add_event.
 
 The following actions can be found in this module:
@@ -84,16 +87,24 @@ The following actions can be found in this module:
 - `set_attributes`: that adds a list of attributes to a given span;
 - `add_events`: similarly to the previous one but this time for events.
 
-#### **5.c. Attributes**
+#### **4.c. Attributes**
 Depending on the type of variable that is being observed different kinds of attributes can be accessed. DFs (_Dataframes_), rdd, and SparkSessions are among the resources that have built-in observability metrics for Spark.  
 
 More attributes will be added in the near future.
-### **6. How to Use - _high level_**
+### **5. How to Use - _high level_**
 
 As it can be seen in the [engine.py](./app/core/engine.py) script - that intends to be a high-level example that congregates all the elements of the solution -, this **TBD** can be used by taking into account the following code snippet:
 
 ````
-Code to be added here
+# create the tracer
+tracer = PipelineTracer(
+    processor_type='BATCH', # default value - illustration purposes
+    exporter_type='CONSOLE' # default value - illustration purposes
+).get_tracer('engine_test')
+
+# set attributes
+SparkObservability(spark, tracer, 'local_computer', 'test_session')
+SparkObservability(df, tracer, 'local_computer', 'test_data')
 ````
 
 **_More documentation will be added in the near future on this._**
