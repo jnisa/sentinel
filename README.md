@@ -4,7 +4,7 @@
 </p> -->
 
 <h1 align='center'>
-    <strong> TBD </strong>
+    <strong> Telescope </strong>
 </h1>
 
 <p align='center'>
