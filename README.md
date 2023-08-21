@@ -93,9 +93,9 @@ Depending on the type of variable that is being observed different kinds of attr
 More attributes will be added in the near future.
 ### **5. How to Use - _high level_**
 
-As it can be seen in the [engine.py](./app/core/engine.py) script - that intends to be a high-level example that congregates all the elements of the solution -, this **TBD** can be used by taking into account the following code snippet:
+As it can be seen in the [engine.py](./engine.py) script - that intends to be a high-level example that congregates all the elements of the solution -, this **TBD** can be used by taking into account the following code snippet:
 
-````
+````python
 # create the tracer
 tracer = PipelineTracer(
     processor_type='BATCH', # default value - illustration purposes
