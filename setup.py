@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 # Setup the package
 setup(
-    name='sentinel',
+    name='telescope',
     version='0.0.1',
     description='Package to grant observability to the pipelines running on a platform.',
     author='Data Team',

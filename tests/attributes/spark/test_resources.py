@@ -12,12 +12,12 @@ from opentelemetry.trace.status import Status
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace import Span
 
-from app.attributes.spark import SparkObservability
+from app.attributes.spark.resources import TelescopeSparkResources
 
 from opentelemetry.sdk.trace import Tracer
 
 
-class TestSparkObservability(TestCase):
+class TestTelescopeSparkResources(TestCase):
 
     def test_spark_observability__init__(self):
             
@@ -31,12 +31,12 @@ class TestSparkObservability(TestCase):
             service_id = 'databricks'
     
             with self.assertRaises(Exception) as context:
-                SparkObservability(object_span, mock_tracer, service_id)
+                TelescopeSparkResources(object_span, mock_tracer, service_id)
 
             self.assertIn('The object_span is not a valid object type', str(context.exception))
 
     def test_service_id_property(self):
-        
+
         spark = SparkSession.builder.getOrCreate()
         df = spark.createDataFrame([(1, 2, 3)], ['a', 'b', 'c'])
 
@@ -46,7 +46,7 @@ class TestSparkObservability(TestCase):
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         service_id = 'databricks'
-        observability = SparkObservability(df, mock_tracer, service_id)
+        observability = TelescopeSparkResources(mock_tracer, service_id, df)
 
         expected = service_id
         actual = observability.service_id
@@ -63,7 +63,7 @@ class TestSparkObservability(TestCase):
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         service_id = 'databricks'
-        observability = SparkObservability(spark, mock_tracer, service_id)
+        observability = TelescopeSparkResources(mock_tracer, service_id, spark)
 
         expected = type(spark)
         actual = observability.object_type
@@ -82,10 +82,10 @@ class TestSparkObservability(TestCase):
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         service_id = 'databricks'
-        observability = SparkObservability(df, mock_tracer, service_id)
+        observability = TelescopeSparkResources(mock_tracer, service_id, df, 'df_test')
 
         span_id = f'{service_id}.df.df_test'
-        observability._df_features(df, span_id)
+        observability._df_attributes(span_id)
 
         # stop the spark session
         spark.stop()
@@ -122,10 +122,10 @@ class TestSparkObservability(TestCase):
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         service_id = 'databricks'
-        observability = SparkObservability(mock_spark_session, mock_tracer, service_id)
+        observability = TelescopeSparkResources(mock_tracer, service_id, mock_spark_session, 'test_session')
 
         span_id = f'{service_id}.SparkSession.test_session'
-        observability._ss_specs(mock_spark_session, span_id)
+        observability._ss_attributes(span_id)
 
         # check if the attributes are set
         expected = [
@@ -151,10 +151,10 @@ class TestSparkObservability(TestCase):
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
         service_id = 'function_app'
-        observability = SparkObservability(rdd, mock_tracer, service_id)
+        observability = TelescopeSparkResources(mock_tracer, service_id, rdd, 'rdd_test')
 
         span_id = f'{service_id}.rdd.test'
-        observability._rdd_features(rdd, span_id)
+        observability._rdd_attributes(span_id)
 
         # stop the spark session
         spark.stop()

@@ -14,7 +14,7 @@ class ServiceSpan:
     """
     Class that is a wrapper of the actions that can be performed on a span.
 
-    TODO. As features work we can add more methods to this class, e.g.:
+    TODO. As future work we can add more methods to this class, e.g.:
     - create_child_span - it's possible to have parent-child relationships between spans;
     - _create_link - it's possible to establish connections between spans, however this is not
     the same as the parent-child relationship;

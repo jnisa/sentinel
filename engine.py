@@ -2,7 +2,7 @@
 # This will allows us to see if the all the components are working together.
 
 from app.client.pipeline import PipelineTracer
-from app.attributes.spark import SparkObservability
+from app.attributes.spark.resources import SparkObservability
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType
