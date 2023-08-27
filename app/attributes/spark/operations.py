@@ -7,7 +7,6 @@ from pyspark.sql import DataFrame
 from pyspark.rdd import RDD
 
 from app.client.service import ServiceSpan
-from app.attributes.auxiliars import get_id
 
 
 class TelescopeSparkOperations:
@@ -15,13 +14,11 @@ class TelescopeSparkOperations:
     def __init__(
         self,
         tracer: Tracer,
-        service_id: str,
-        operation_id: str
+        service_id: str
     ):
         
         self._tracer = tracer
         self._service_id = service_id
-        self._operation_id = operation_id
 
 
     @property
@@ -32,15 +29,7 @@ class TelescopeSparkOperations:
 
         return self._service_id
 
-    @property
-    def operation_id(self):
-        """
-        In case the user want to retrieve the identifier of the operations that will be performed.
-        """
-
-        return self._operation_id
-
-    def df_operation(self, value):
+    def df_operation(self, operation_id):
         """
         A considerable amount of operations can be performed on a pyspark dataframe. Some of the
         most common operations are:
@@ -63,12 +52,13 @@ class TelescopeSparkOperations:
         your script:
 
         >>> from app.attributes.spark.operations import TelescopeSparkOperations
-        >>> telescope = TelescopeSparkOperations(tracer, service_id, operation_id)
-        >>> @telescope.df_operation
+        >>> telescope = TelescopeSparkOperations(tracer, service_id)
+        >>> @telescope.df_operation('first_last_names_inner_join')
             def my_function(df1, df2):
                 # your code here
                 return df1.join(df2, df1.id == df2.id, 'inner')
 
+        :param operation_id: The id of the operation that is being monitorized
         :return: The wrapper function that will be used to monitorize the Spark operations
         """
 
@@ -82,34 +72,33 @@ class TelescopeSparkOperations:
             def wrapper(*args, **kwargs):
 
                 # TODO. consider more attributes to be included here     
-                # TODO. consider the reallocation of this method           
-                df_attributes = lambda df: {
+                # TODO. consider the reallocation of this method (auxiliars script for example)        
+                df_attributes = lambda idx, df: {
+                        'df': idx,
                         'columns': df.columns,
                         'count': df.count(),
                         'dtypes': df.dtypes,
-                        'schema': df.schema,
                     }
 
-                if all(isinstance(df, DataFrame) for df in args):
+                span_id = '.'.join([self._service_id, operation_id])
+
+                with self._tracer.start_as_current_span(name=span_id) as span:
 
                     # observability over the arguments provided                    
-                    attributes = {
-                        f'df_{df_idx}': df_attributes(df)
+                    attributes = [
+                        df_attributes(f'df{df_idx + 1}', df)
                         for df_idx, df in enumerate(args)
-                    }
+                    ]
 
                     # observability over the result of the function
                     result = func(*args, **kwargs)
-                    attributes.update({'df_result': df_attributes(result)})
+                    attributes.append(df_attributes(f'df_result', result))
+
+                    # breakpoint()
 
                     # add the attributes to the span
-                    for k, v in attributes.items():
-                        span_id = get_id(self.service_id, self.operation_id, k)
-                        with self._tracer.start_as_current_span(name=span_id) as span:
-                            span.set_attributes(v)
-
-                else:
-                    raise Exception('The arguments of the function must be dataframes.')
+                    for att in attributes:
+                        span.set_attributes(att)
 
                 return result
             return wrapper

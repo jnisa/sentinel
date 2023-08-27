@@ -10,10 +10,10 @@ from pyspark.rdd import RDD
 
 from opentelemetry.trace.status import Status
 from opentelemetry.trace.status import StatusCode
-from opentelemetry.sdk.trace import Span
 
 from app.attributes.spark.operations import TelescopeSparkOperations
 
+from opentelemetry.sdk.trace import Span
 from opentelemetry.sdk.trace import Tracer
 
 
@@ -22,48 +22,80 @@ class TestTelescopeSparkOperations(TestCase):
     def test_spark_observability__init__(self):
             
             service_id = 'databricks'
-            operation_id = 'test_join'
     
             mock_span = MagicMock(spec=Span)
             mock_span.set_span_status = MagicMock()
             mock_tracer = MagicMock(spec=Tracer)
             mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
     
-            observability = TelescopeSparkOperations(mock_tracer, service_id, operation_id)
+            observability = TelescopeSparkOperations(mock_tracer, service_id)
     
             self.assertEqual(service_id, observability._service_id)
-            self.assertEqual(operation_id, observability._operation_id)
 
     def test_service_id_property(self):
 
         service_id = 'databricks'
-        operation_id = 'test_union'
 
         mock_span = MagicMock(spec=Span)
         mock_span.set_span_status = MagicMock()
         mock_tracer = MagicMock(spec=Tracer)
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-        observability = TelescopeSparkOperations(mock_tracer, service_id, operation_id)
+        observability = TelescopeSparkOperations(mock_tracer, service_id)
 
         expected = service_id
         actual = observability.service_id
 
         self.assertEqual(actual, expected)
 
-    def test_operation_id_property(self):
+    def test_df_operation(self):
+        service_id = 'databricks'
 
-        service_id = 'functionApp'
-        operation_id = 'test_withColumn'
+        spark = SparkSession.builder.getOrCreate()
+        df1 = spark.createDataFrame([(1, 'Bear'), (2, 'John')], ['ID', 'FirstName'])
+        df2 = spark.createDataFrame([(1, 'Grylls'), (2, 'Cavanagh')], ['ID', 'LastName'])
 
         mock_span = MagicMock(spec=Span)
         mock_span.set_span_status = MagicMock()
         mock_tracer = MagicMock(spec=Tracer)
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
-        observability = TelescopeSparkOperations(mock_tracer, service_id, operation_id)
+        telescope_operations = TelescopeSparkOperations(mock_tracer, service_id)
 
-        expected = operation_id
-        actual = observability.operation_id
+        def inner_join_test(df1, df2):
+            return df1.join(df2, df1.ID == df2.ID, 'inner')
+
+        inner_join_test = telescope_operations.df_operation('test_inner_join')(inner_join_test)
+        
+        inner_join_test(df1, df2)  # Call the decorated function
+
+        # stop the spark session
+        spark.stop()
+
+        # check if the attributes are set
+        expected = [
+            ({
+                'df': 'df1', 
+                'columns': ['ID', 'FirstName'], 
+                'count': 2, 
+                'dtypes': [('ID', 'bigint'), ('FirstName', 'string')]
+            }), 
+            ({
+                'df': 'df2', 
+                'columns': ['ID', 'LastName'], 
+                'count': 2, 
+                'dtypes': [('ID', 'bigint'), ('LastName', 'string')]
+            }), 
+            ({
+                'df': 'df_result', 
+                'columns': ['ID', 'FirstName', 'ID', 'LastName'], 
+                'count': 2, 
+                'dtypes': [('ID', 'bigint'), ('FirstName', 'string'), ('ID', 'bigint'), ('LastName', 'string')]
+            })
+        ]
+
+        actual = []
+        for call_args in mock_span.set_attributes.call_args_list:
+            actual.extend(call_args[0])
 
         self.assertEqual(actual, expected)
