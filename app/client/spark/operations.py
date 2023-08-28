@@ -4,7 +4,6 @@
 from opentelemetry.sdk.trace import Tracer
 
 from app.client.auxiliars import get_id
-from app.client.service import ServiceSpan
 from app.client.spark.attributes import get_attributes
 
 class TelescopeSparkOperations:
@@ -59,7 +58,6 @@ class TelescopeSparkOperations:
         :return: The wrapper function that will be used to monitorize the Spark operations
         """
 
-        # TODO. not sure on the usage of the kwargs here
         def decorator(func):
             """
             Decorator function that will be used to monitorize the Dataframe Spark operations.
@@ -72,13 +70,13 @@ class TelescopeSparkOperations:
 
                     # observability over the arguments provided                    
                     attributes = [
-                        get_attributes.df(f'df{df_idx + 1}', df)
+                        {f'df{df_idx + 1}': str(get_attributes.df(df))}
                         for df_idx, df in enumerate(args)
                     ]
 
                     # observability over the result of the function
                     result = func(*args, **kwargs)
-                    attributes.append(get_attributes.df('df_result', result))
+                    attributes.append({'df_result': str(get_attributes.df(result))})
 
                     # add the attributes to the span
                     for att in attributes:
@@ -117,7 +115,6 @@ class TelescopeSparkOperations:
         :return: The wrapper function that will be used to monitorize the Spark operations
         """
 
-        # TODO. not sure on the usage of the kwargs here
         def decorator(func):
             """
             Decorator function that will be used to monitorize the Spark RDD operations.
@@ -130,13 +127,13 @@ class TelescopeSparkOperations:
 
                     # observability over the arguments provided                    
                     attributes = [
-                        get_attributes.rdd(f'rdd{rdd_idx + 1}', rdd) 
+                        {f'rdd{rdd_idx + 1}': str(get_attributes.rdd(rdd))} 
                         for rdd_idx, rdd in enumerate(args)
                     ]
 
                     # observability over the result of the function
                     result = func(*args, **kwargs)
-                    attributes.append(get_attributes.rdd('rdd_result', result))
+                    attributes.append({'rdd_result': str(get_attributes.rdd(result))})
 
                     # add the attributes to the span
                     for att in attributes:

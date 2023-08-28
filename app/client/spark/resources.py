@@ -11,7 +11,6 @@ from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
 from app.client.auxiliars import get_id
-from app.client.service import ServiceSpan
 from app.client.spark.attributes import get_attributes
 
 # TODO. things to be added:
@@ -112,12 +111,7 @@ class TelescopeSparkResources:
 
         with self._tracer.start_as_current_span(name=span_id) as span:
 
-            ServiceSpan.set_attributes(
-                span, get_attributes.df(self._var_id, self._object_span)
-            )
-
-            # TODO. status seems to make more sense on requests, not on attributes
-            # span.set_span_status(Status(StatusCode.OK))
+            span.set_attributes(get_attributes.df(self._object_span))
 
     def _ss_attributes(self, span_id: str):
         """
@@ -128,10 +122,7 @@ class TelescopeSparkResources:
 
         with self._tracer.start_as_current_span(name=span_id) as span:
 
-            ServiceSpan.set_attributes(span, get_attributes.ss(self._object_span))
-
-            # TODO. status seems to make more sense on requests, not on attributes
-            # span.set_span_status(Status(StatusCode.OK))
+            span.set_attributes(get_attributes.ss(self._object_span))
 
     def _rdd_attributes(self, span_id: str):
         """
@@ -142,9 +133,4 @@ class TelescopeSparkResources:
 
         with self._tracer.start_as_current_span(name=span_id) as span:
             
-            ServiceSpan.set_attributes(
-                span, get_attributes.rdd(self._var_id, self._object_span)
-            )
-
-            # TODO. status seems to make more sense on requests, not on attributes
-            # span.set_span_status(Status(StatusCode.OK))
+            span.set_attributes(get_attributes.rdd(self._object_span))

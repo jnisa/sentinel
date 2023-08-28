@@ -1,6 +1,7 @@
 # Unit Tests to the Spark Operations
 
 from unittest import TestCase
+from unittest.mock import patch
 from unittest.mock import MagicMock
 
 from pyspark import SparkContext
@@ -28,7 +29,10 @@ class TestTelescopeSparkOperations(TestCase):
 
         observability = TelescopeSparkOperations(mock_tracer, service_id)
 
-        self.assertEqual(service_id, observability._service_id)
+        actual = observability._service_id
+        expected = service_id
+
+        self.assertEqual(actual, expected)
 
     def test_service_id_property(self):
 
@@ -41,8 +45,8 @@ class TestTelescopeSparkOperations(TestCase):
 
         observability = TelescopeSparkOperations(mock_tracer, service_id)
 
-        expected = service_id
         actual = observability.service_id
+        expected = service_id
 
         self.assertEqual(actual, expected)
 
@@ -54,7 +58,6 @@ class TestTelescopeSparkOperations(TestCase):
         df2 = spark.createDataFrame([(1, 'Grylls'), (2, 'Cavanagh')], ['ID', 'LastName'])
 
         mock_span = MagicMock(spec=Span)
-        mock_span.set_span_status = MagicMock()
         mock_tracer = MagicMock(spec=Tracer)
         mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
@@ -69,31 +72,13 @@ class TestTelescopeSparkOperations(TestCase):
         # stop the spark session
         spark.stop()
 
-        # check if the attributes are set
+        # Flatten the list of call arguments
+        actual = [arg for args, _ in mock_span.set_attributes.call_args_list for arg in args]
         expected = [
-            ({
-                'df': 'df1', 
-                'columns': ['ID', 'FirstName'], 
-                'count': 2, 
-                'dtypes': [('ID', 'bigint'), ('FirstName', 'string')]
-            }), 
-            ({
-                'df': 'df2', 
-                'columns': ['ID', 'LastName'], 
-                'count': 2, 
-                'dtypes': [('ID', 'bigint'), ('LastName', 'string')]
-            }), 
-            ({
-                'df': 'df_result', 
-                'columns': ['ID', 'FirstName', 'ID', 'LastName'], 
-                'count': 2, 
-                'dtypes': [('ID', 'bigint'), ('FirstName', 'string'), ('ID', 'bigint'), ('LastName', 'string')]
-            })
+            {'df1': str({'columns': ['ID', 'FirstName'], 'count': 2})},
+            {'df2': str({'columns': ['ID', 'LastName'], 'count': 2})},
+            {'df_result': str({'columns': ['ID', 'FirstName', 'ID', 'LastName'], 'count': 2})}
         ]
-
-        actual = []
-        for call_args in mock_span.set_attributes.call_args_list:
-            actual.extend(call_args[0])
 
         self.assertEqual(actual, expected)
 
@@ -120,13 +105,10 @@ class TestTelescopeSparkOperations(TestCase):
         spark.stop()
 
         # check if the attributes are set
+        actual = [arg for args, _ in mock_span.set_attributes.call_args_list for arg in args]
         expected = [
-            {'rdd': 'rdd1', 'count': 9, 'partitions': 1}, 
-            {'rdd': 'rdd_result', 'count': 4, 'partitions': 1} 
+            {'rdd1': str({'count': 9, 'partitions': 1})}, 
+            {'rdd_result': str({'count': 4, 'partitions': 1})} 
         ]
-
-        actual = []
-        for call_args in mock_span.set_attributes.call_args_list:
-            actual.extend(call_args[0])
 
         self.assertEqual(actual, expected)

@@ -1,19 +1,18 @@
 # Functions that will be used to compute and set the attributes
 # of the spark objects that will be monitored.
 
+import json
+
 class get_attributes:
     # TODO. consider more attributes to be included here
-    df = lambda df_id, df: {
-        'df': df_id,
+    df = lambda df: {
         'columns': df.columns,
         'count': df.count(),
-        'dtypes': df.dtypes,
     }
     # TODO. consider more attributes to be included here
-    rdd = lambda rdd_id, rdd: {
-        'rdd': rdd_id,
+    rdd = lambda rdd: {
         'count': rdd.count(),
-        'partitions': rdd.getNumPartitions()
+        'partitions': rdd.getNumPartitions(),
     }
     # TODO. filter some the attributes obtained from the spark session
     ss = lambda ss: {
