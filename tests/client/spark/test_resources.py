@@ -9,7 +9,7 @@ from pyspark.rdd import RDD
 
 from opentelemetry.sdk.trace import Span
 
-from app.client.spark.resources import TelescopeSparkResources
+from telescope.client.spark.resources import TelescopeSparkResources
 
 from opentelemetry.sdk.trace import Tracer
 

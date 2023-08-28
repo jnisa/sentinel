@@ -1,9 +1,9 @@
 # Bring all the components together and run the tracer and span.
 # This will allows us to see if the all the components are working together.
 
-from app.client.pipeline import PipelineTracer
-from app.client.spark.resources import TelescopeSparkResources 
-from app.client.spark.operations import TelescopeSparkOperations
+from telescope.client.pipeline import PipelineTracer
+from telescope.client.spark.resources import TelescopeSparkResources 
+from telescope.client.spark.operations import TelescopeSparkOperations
 
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType

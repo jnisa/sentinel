@@ -10,7 +10,7 @@ from pyspark.sql import SparkSession
 from opentelemetry.trace.status import Status
 from opentelemetry.trace.status import StatusCode
 
-from app.client.spark.operations import TelescopeSparkOperations
+from telescope.client.spark.operations import TelescopeSparkOperations
 
 from opentelemetry.sdk.trace import Span
 from opentelemetry.sdk.trace import Tracer

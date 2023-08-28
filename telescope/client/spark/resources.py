@@ -10,8 +10,8 @@ from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
-from app.client.auxiliars import get_id
-from app.client.spark.attributes import get_attributes
+from telescope.client.auxiliars import get_id
+from telescope.client.spark.attributes import get_attributes
 
 # TODO. things to be added:
 # 1. pass the tracer as a parameter to the decorator;

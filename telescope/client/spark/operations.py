@@ -3,8 +3,8 @@
 
 from opentelemetry.sdk.trace import Tracer
 
-from app.client.auxiliars import get_id
-from app.client.spark.attributes import get_attributes
+from telescope.client.auxiliars import get_id
+from telescope.client.spark.attributes import get_attributes
 
 class TelescopeSparkOperations:
 

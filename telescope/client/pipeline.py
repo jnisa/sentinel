@@ -1,11 +1,13 @@
 # Class that will be used to grant the monitorization of pipelines
 # currently running on the platform targeted by this project.
 
+from typing import Optional
+
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace import TracerProvider
 
-from app.constants.tracer import TracerProcessorType
-from app.constants.tracer import TracerExporterType
+from telescope.constants.tracer import TracerProcessorType
+from telescope.constants.tracer import TracerExporterType
 
 
 class PipelineTracer:
@@ -21,17 +23,24 @@ class PipelineTracer:
     def __init__(
             self, 
             processor_type: str = 'BATCH', 
-            exporter_type: str = 'CONSOLE'
+            exporter_type: str = 'CONSOLE',
+            key_vault_id: Optional[str] = None,
+            app_insights_secret: Optional[str] = None
         ) -> Tracer:
         """
         Initialize the PipelineTracer class.
 
         :param processor_type: The type of processor that will be used by the tracer.
         :param exporter_type: The type of exporter that will be used by the tracer.
+        :param key_vault_id: The id of the Azure Key Vault that will be used by the tracer.
+        :param app_insights_secret: The secret that will be used by the tracer to connect to the
+        application insights service.
         """
 
         self._processor_type = processor_type
         self._exporter_type = exporter_type
+        self._key_vault_id = key_vault_id
+        self._app_insights_secret = app_insights_secret
 
         provider = TracerProvider()
 
@@ -86,10 +95,13 @@ class PipelineTracer:
         """
 
         try:
-            return getattr(TracerExporterType, self._exporter_type)()
+            if self._exporter_type == 'AZURE_TRACE':
+                return getattr(TracerExporterType, self._exporter_type)(self._key_vault_id, self._app_insights_secret)
+            else:
+                return getattr(TracerExporterType, self._exporter_type)()
         except:
             raise Exception(
-                "Invalid exporter type provided. The only types available are: CONSOLE and MEMORY"
+                "Invalid exporter type provided. The only types available are: CONSOLE and AZURE_TRACE"
             )  
 
     def _create_processor(self, exporter: TracerExporterType) -> TracerProcessorType:

@@ -40,7 +40,7 @@ class AzureClient:
 
         return self._credential
 
-    def get_kv_secret(self, secret_name: str) -> str:
+    def _get_kv_secret(self, secret_name: str) -> str:
         """
         Retrive the value of a secret from an Azure Key Vault secret.
 
@@ -56,19 +56,19 @@ class AzureClient:
         except:
             raise Exception(f"Secret {secret_name} does not exist.")
 
-    def get_az_monitor_exporter(self, app_insights_pk: str) -> AzureMonitorTraceExporter:
+    def get_az_monitor_exporter(self, app_insights_secret: str) -> AzureMonitorTraceExporter:
         """
         Create an instance of the Azure Monitor Trace Exporter.
 
         The connection to the application insights service is done through the primary key.
 
-        :param app_insights_pk: the primary key of the application insights service
+        :param app_insights_secret: app insights secret that contains the connection primary key
         :return: an instance of the Azure Monitor Trace Exporter
         """
 
         try:
             return AzureMonitorTraceExporter.from_connection_string(
-                connection_string = f"InstrumentationKey={app_insights_pk}"
+                connection_string = f"InstrumentationKey={self._get_kv_secret(app_insights_secret)}"
             )
         except:
             raise Exception("Could not connect to the application insights service.")
