@@ -29,7 +29,7 @@ class ServiceSpan:
 
     # TODO. ajust the documentation of this method
     # TODO. check if there's a way to set the attributes of the span in a more efficient way.
-    def set_attributes(current_span: Span, attributes: List[Dict]):
+    def set_attributes(current_span: Span, attributes: Dict):
         """
         Set the attributes of the services.
 
@@ -40,16 +40,15 @@ class ServiceSpan:
         An example of an input to this function would be:
             >>> ServiceSpan.set_attributes(
             >>>     current_span = databricks_span,
-            >>>     attributes = [{'quote_consumed': 100}, {'jobs_running': 10}, {'ram_under_usage': 50}]
+            >>>     attributes = {'quote_consumed': 100, 'jobs_running': 10, 'ram_under_usage': 50}
             >>> )
 
         :param current_span: span that we want to add the attributes to
         :param attributes: dictionary containing the name of the attribute (key) and the value
         """
 
-        for attribute in attributes:
-            for key, value in attribute.items():
-                current_span.set_attribute(key, value)
+        for key, value in attributes.items():
+            current_span.set_attribute(key, value)
 
     def add_events(current_span: Span, events: List[str]):
         """

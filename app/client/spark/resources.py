@@ -10,8 +10,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
+from app.client.auxiliars import get_id
 from app.client.service import ServiceSpan
-from app.attributes.auxiliars import get_id
+from app.client.spark.attributes import get_attributes
 
 # TODO. things to be added:
 # 1. pass the tracer as a parameter to the decorator;
@@ -63,6 +64,7 @@ class TelescopeSparkResources:
         self._object_span = object_span
         self._var_id = var_id
 
+        # TODO. replace the get_id by a join
         # if the object_span is a dataframe, then call the df related functions
         if isinstance(self._object_span, DataFrame):
             # TODO. not sure about this but recheck
@@ -110,13 +112,9 @@ class TelescopeSparkResources:
 
         with self._tracer.start_as_current_span(name=span_id) as span:
 
-            # TODO. add more attributes related with the dataframe
-            attributes = [
-                {'columns': self._object_span.columns},
-                {'columns_count': len(self._object_span.columns)},
-                {'records_count': self._object_span.count()},
-            ]
-            ServiceSpan.set_attributes(span, attributes)
+            ServiceSpan.set_attributes(
+                span, get_attributes.df(self._var_id, self._object_span)
+            )
 
             # TODO. status seems to make more sense on requests, not on attributes
             # span.set_span_status(Status(StatusCode.OK))
@@ -130,9 +128,7 @@ class TelescopeSparkResources:
 
         with self._tracer.start_as_current_span(name=span_id) as span:
 
-            # TODO. filter the attributes that only add noise
-            attributes = [{conf: val} for conf, val in self._object_span.sparkContext.getConf().getAll()]
-            ServiceSpan.set_attributes(span, attributes)
+            ServiceSpan.set_attributes(span, get_attributes.ss(self._object_span))
 
             # TODO. status seems to make more sense on requests, not on attributes
             # span.set_span_status(Status(StatusCode.OK))
@@ -146,13 +142,9 @@ class TelescopeSparkResources:
 
         with self._tracer.start_as_current_span(name=span_id) as span:
             
-            # TODO. add more attributes related with the RDD
-            attributes = [
-                {'id': self._object_span.name()},
-                {'count': self._object_span.count()},
-                {'partitions': self._object_span.getNumPartitions()}
-            ]
-            ServiceSpan.set_attributes(span, attributes)
+            ServiceSpan.set_attributes(
+                span, get_attributes.rdd(self._var_id, self._object_span)
+            )
 
             # TODO. status seems to make more sense on requests, not on attributes
             # span.set_span_status(Status(StatusCode.OK))

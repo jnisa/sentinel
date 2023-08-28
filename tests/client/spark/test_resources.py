@@ -12,7 +12,7 @@ from opentelemetry.trace.status import Status
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace import Span
 
-from app.attributes.spark.resources import TelescopeSparkResources
+from app.client.spark.resources import TelescopeSparkResources
 
 from opentelemetry.sdk.trace import Tracer
 
@@ -21,19 +21,19 @@ class TestTelescopeSparkResources(TestCase):
 
     def test_spark_observability__init__(self):
             
-            object_span = 'test_str'
-    
-            mock_span = MagicMock(spec=Span)
-            mock_span.set_span_status = MagicMock()
-            mock_tracer = MagicMock(spec=Tracer)
-            mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
-    
-            service_id = 'databricks'
-    
-            with self.assertRaises(Exception) as context:
-                TelescopeSparkResources(object_span, mock_tracer, service_id)
+        object_span = 'test_str'
 
-            self.assertIn('The object_span is not a valid object type', str(context.exception))
+        mock_span = MagicMock(spec=Span)
+        mock_span.set_span_status = MagicMock()
+        mock_tracer = MagicMock(spec=Tracer)
+        mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
+
+        service_id = 'databricks'
+
+        with self.assertRaises(Exception) as context:
+            TelescopeSparkResources(object_span, mock_tracer, service_id)
+
+        self.assertIn('The object_span is not a valid object type', str(context.exception))
 
     def test_service_id_property(self):
 
@@ -91,11 +91,12 @@ class TestTelescopeSparkResources(TestCase):
         spark.stop()
 
         # check if the attributes are set
-        expected = [
-            {'columns': ['a', 'b', 'c']},
-            {'columns_count': 3},
-            {'records_count': 1}
-        ]
+        expected = {
+            'df': 'df_test',
+            'columns': ['a', 'b', 'c'],
+            'count': 1,
+            'dtypes': [('a', 'bigint'), ('b', 'bigint'), ('c', 'bigint')]
+        }
         actual = mock_set_attributes.call_args_list[0][0][1]
         self.assertEqual(actual, expected)
             
@@ -128,10 +129,10 @@ class TestTelescopeSparkResources(TestCase):
         observability._ss_attributes(span_id)
 
         # check if the attributes are set
-        expected = [
-            {'spark.app.name': 'MyApp'},
-            {'spark.executor.cores': '2'}
-        ]
+        expected = {
+            'spark.app.name': 'MyApp',
+            'spark.executor.cores': '2'
+        }
         actual = mock_set_attributes.call_args_list[0][0][1]
         self.assertEqual(actual, expected)
 
@@ -160,11 +161,11 @@ class TestTelescopeSparkResources(TestCase):
         spark.stop()
 
         # check if the attributes are set
-        expected = [
-            {'id': None},
-            {'count': 3},
-            {'partitions': 1}
-        ]
+        expected = {
+            'rdd': 'rdd_test',
+            'count': 3,
+            'partitions': 1
+        }
         actual = mock_set_attributes.call_args_list[0][0][1]
         self.assertEqual(actual, expected)
 

@@ -15,10 +15,10 @@ class TestServiceSpan(TestCase):
     @patch('app.client.service.ServiceSpan')
     def test_set_attributes(self, mock_service_span):
 
-        attributes = [
-            {'quote_consumed': 100},
-            {'jobs_running': 10}
-        ]
+        attributes = {
+            'quote_consumed': 100,
+            'jobs_running': 10
+        }
 
         mock_span_instance = Mock(spec=Span)
         mock_service_span.return_value = mock_span_instance
