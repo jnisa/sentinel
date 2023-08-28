@@ -6,10 +6,9 @@ from unittest.mock import patch, MagicMock
 from opentelemetry.sdk.trace import Tracer
 from opentelemetry.sdk.trace import TracerProvider
 
-from app.client.pipeline import PipelineTracer
-
-from app.constants.tracer import TracerExporterType
-from app.constants.tracer import TracerProcessorType
+from telescope.client.pipeline import PipelineTracer
+from telescope.constants.tracer import TracerExporterType
+from telescope.constants.tracer import TracerProcessorType
 
 class TestPipelineTracer(TestCase):
 
@@ -74,7 +73,7 @@ class TestPipelineTracer(TestCase):
 
         self.assertIn("Invalid exporter type", str(context.exception))
 
-    @patch("app.client.pipeline.TracerProvider")
+    @patch("telescope.client.pipeline.TracerProvider")
     def test__create_processor_basic(self, mock_tracer_provider):
 
         processor_type = "SIMPLE"
@@ -90,7 +89,7 @@ class TestPipelineTracer(TestCase):
 
         self.assertEqual(actual, expected)
 
-    @patch("app.client.pipeline.TracerProvider")
+    @patch("telescope.client.pipeline.TracerProvider")
     def test__create_processor_complex(self, mock_tracer_provider):
 
         processor_type = "TEST_PROCESSOR"

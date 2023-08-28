@@ -14,7 +14,7 @@
 <div align="center">
 
   <a href="code coverage">![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)</a>
-  <a href="tests">![tests](https://img.shields.io/badge/tests-22%20passed%2C%200%20failed-brightgreen)</a>
+  <a href="tests">![tests](https://img.shields.io/badge/tests-24%20passed%2C%200%20failed-brightgreen)</a>
   <a href="opentelemetry version">![scala_version](https://img.shields.io/badge/opentelemetry-1.19.1-blue)</a>
   <a href="python version">![sbt_version](https://img.shields.io/badge/python-3.10.9-blue?logo=python&logoColor=white)</a>
 
@@ -78,23 +78,17 @@ Here are the following actions supported:
 - `get_tracer`: method used for the creation of new tracers;
 - `_set_exporter_type`: at the moment only one exporter type is supported: `CONSOLE`;
 - `_create_processor`: there's two kinds of processors that are supported: `BATCH` and `SIMPLE`.
-
-#### **4.b. ServiceSpan**
-The ServiceSpan is essentially a wrapper around two core actions on the span level: set_attribute and add_event.
-
-The following actions can be found in this module:
-
-- `set_attributes`: that adds a list of attributes to a given span;
-- `add_events`: similarly to the previous one but this time for events.
-
-#### **4.c. Attributes**
-Depending on the type of variable that is being observed different kinds of attributes can be accessed. DFs (_Dataframes_), rdd, and SparkSessions are among the resources that have built-in observability metrics for Spark.  
+#### **4.b. Attributes**
+It's important to highlight that regarding attributes we can have monitorization at two different levels:
+- **resources** - where you'll retrieve features from the variables provided to the telescope module;
+- **operations** - where a monitorization is granted either to the input or output of a certain operation.
 
 More attributes will be added in the near future.
 ### **5. How to Use - _high level_**
 
-As it can be seen in the [engine.py](./engine.py) script - that intends to be a high-level example that congregates all the elements of the solution -, this **TBD** can be used by taking into account the following code snippet:
+As it can be seen in the [engine.py](./engine.py) script - that intends to be a high-level example that congregates all the elements of the solution -, the **Telescope** can be used in two different ways - as the next code snippet illustrates:
 
+- _Observability at the **resource level**_:
 ````python
 # create the tracer
 tracer = PipelineTracer(
@@ -106,6 +100,28 @@ tracer = PipelineTracer(
 SparkObservability(spark, tracer, 'local_computer', 'test_session')
 SparkObservability(df, tracer, 'local_computer', 'test_data')
 ````
+
+- _Observability at the **operation level**_:
+````python
+# create the tracer
+tracer = PipelineTracer(
+    processor_type='BATCH', # default value - illustration purposes
+    exporter_type='CONSOLE' # default value - illustration purposes
+).get_tracer('engine_test')
+
+# initialize the telescope
+telescope = Telescope(tracer, 'databricks')
+
+# define the operation
+@telescope.df_operation('test_inner_join')
+def inner_join(df1, df2):
+    return df1.join(df2, on='id', how='inner')
+
+# call the operation
+inner_join(df1, df2)
+````
+
+And the `inner_join` operation will be monitored by the Telescope.
 
 **_More documentation will be added in the near future on this._**
 
