@@ -97,8 +97,8 @@ tracer = PipelineTracer(
 ).get_tracer('engine_test')
 
 # set attributes
-SparkObservability(spark, tracer, 'local_computer', 'test_session')
-SparkObservability(df, tracer, 'local_computer', 'test_data')
+TelescopeSparkResources(tracer, 'local_computer', spark, 'test_session')
+TelescopeSparkResources(tracer, 'local_computer',df ,'test_data')
 ````
 
 - _Observability at the **operation level**_:
@@ -110,7 +110,7 @@ tracer = PipelineTracer(
 ).get_tracer('engine_test')
 
 # initialize the telescope
-telescope = Telescope(tracer, 'databricks')
+telescope = TelescopeSparkOperations(tracer, 'databricks')
 
 # define the operation
 @telescope.df_operation('test_inner_join')

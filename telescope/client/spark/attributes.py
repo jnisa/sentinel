@@ -1,8 +1,6 @@
 # Functions that will be used to compute and set the attributes
 # of the spark objects that will be monitored.
 
-import json
-
 class get_attributes:
     # TODO. consider more attributes to be included here
     df = lambda df: {

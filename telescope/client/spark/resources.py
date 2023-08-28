@@ -13,11 +13,6 @@ from pyspark.rdd import RDD
 from telescope.client.auxiliars import get_id
 from telescope.client.spark.attributes import get_attributes
 
-# TODO. things to be added:
-# 1. pass the tracer as a parameter to the decorator;
-# 2. the class should be able to handle multiple spark resources at the same time;
-# 3. duly handle the configuration parameters provided (e.g. service_id, var_id, etc.)
-
 class TelescopeSparkResources:
     """
     Class that will handle all the attributes that will be used to monitor any Spark

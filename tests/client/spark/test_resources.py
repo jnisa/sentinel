@@ -8,10 +8,9 @@ from pyspark.sql import SparkSession
 from pyspark.rdd import RDD
 
 from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace import Tracer
 
 from telescope.client.spark.resources import TelescopeSparkResources
-
-from opentelemetry.sdk.trace import Tracer
 
 
 class TestTelescopeSparkResources(TestCase):
