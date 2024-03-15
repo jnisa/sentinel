@@ -20,7 +20,8 @@ var/
 .serverless
 
 # These are some examples of commonly ignored file patterns.
-*.coverage
+**.coverage
+**.coverage**
 
 # Node artifact files
 node_modules/
